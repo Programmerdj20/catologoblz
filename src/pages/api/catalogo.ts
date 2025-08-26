@@ -4,6 +4,7 @@ const API_URL = import.meta.env.ASTRO_API_URL || "https://belatrizcolombia.com/a
 const API_USER = import.meta.env.ASTRO_API_USER || "a2ya10afP9TJVCL2Geh/8IUoGbfcOiEnzi1q5WQDx7G1sjIBo8OfU19rW4OK";
 const API_PASS = import.meta.env.ASTRO_API_PASS || "o2yo12oF6T3Hfv.kPLtJKvO3BQE4esRQT3gB86F7GV6ADJAT55zgaNgTEB3m";
 
+
 // console.log("Variables de entorno cargadas:");
 // console.log("API_URL:", API_URL);
 // console.log("API_USER:", API_USER ? "✓ Configurado" : "✗ No encontrado");
@@ -38,30 +39,56 @@ function getCategoryName(categoryId: string): string {
     return CATEGORY_MAP[categoryId] || `Categoría ${categoryId}`;
 }
 
-function getBasicProductImages(referencia: string, imagen?: string): string[] {
+async function getBasicProductImages(referencia: string, imagen?: string): Promise<string[]> {
     const images: string[] = [];
     const baseUrl = `https://belatrizcolombia.com/app/public/template/shop/img/img_productos/${referencia}/`;
     
-    // Si viene con imagen específica, usarla
+    // La API trae la primera imagen
     if (imagen) {
         const imageUrl = imagen.startsWith('http') 
             ? imagen 
             : baseUrl + imagen;
         images.push(imageUrl);
-        
-        // Solo agregar una segunda imagen común
-        if (imagen === "PERFIL.webp") {
-            images.push(baseUrl + "PERFIL_2.webp");
-        } else {
-            // Para otras imágenes, intentar variante _2
-            const baseName = imagen.replace(/\.[^/.]+$/, "");
-            const ext = imagen.includes('.') ? imagen.split('.').pop() : 'webp';
-            images.push(baseUrl + baseName + "_2." + ext);
-        }
     } else {
-        // Usar imágenes por defecto
-        images.push(baseUrl + 'PERFIL.webp');
-        images.push(baseUrl + 'PERFIL_2.webp');
+        // Si no hay imagen de la API, usar placeholder
+        images.push('/assets/placeholder.svg');
+    }
+    
+    // Obtener segunda imagen dinámicamente del directorio
+    try {
+        const authHeader = basicAuthHeader("1037614143", "1037614143");
+        const directoryUrl = baseUrl;
+        
+        const response = await fetch(directoryUrl, {
+            method: "GET",
+            headers: {
+                "Authorization": authHeader,
+                "User-Agent": "Mozilla/5.0 (compatible; JewelryCatalog/1.0)",
+            },
+            signal: AbortSignal.timeout(5000)
+        });
+
+        if (response.ok) {
+            const html = await response.text();
+            const imageFiles = [];
+            const lines = html.split('\n');
+            
+            for (const line of lines) {
+                const match = line.match(/<a href="([^"]+\.(jpg|jpeg|png|webp|gif))">/i);
+                if (match) {
+                    imageFiles.push(match[1]);
+                }
+            }
+            
+            // Tomar la primera imagen que encuentre para usarla como segunda
+            if (imageFiles.length > 0) {
+                const segundaImagenUrl = baseUrl + imageFiles[0];
+                images.push(segundaImagenUrl);
+                console.log(`Segunda imagen encontrada para ${referencia}: ${imageFiles[0]}`);
+            }
+        }
+    } catch (error) {
+        console.log(`No se pudo obtener segunda imagen para ${referencia}:`, error);
     }
     
     return images;
@@ -78,7 +105,7 @@ interface Product {
     material: string;
 }
 
-function normalizeProduct(p: any): Product | null {
+async function normalizeProduct(p: any): Promise<Product | null> {
     // console.log("Normalizando producto:", p.referencia, p.descripción);
 
     const id = p.referencia || p.id || p.ID || p.ref || String(Math.random());
@@ -93,7 +120,7 @@ function normalizeProduct(p: any): Product | null {
     
     if (p.referencia) {
         // Temporalmente usando método simple para evitar timeouts
-        images = getBasicProductImages(p.referencia, p.imagen);
+        images = await getBasicProductImages(p.referencia, p.imagen);
         console.log(`Producto ${p.referencia}: usando ${images.length} imágenes básicas`);
     }
     
@@ -104,11 +131,7 @@ function normalizeProduct(p: any): Product | null {
             : `https://belatrizcolombia.com/app/public/template/shop/img/img_productos/${p.referencia}/${p.imagen}`;
         images = [imageUrl];
         
-        // Intentar segunda imagen
-        if (p.imagen === "PERFIL.webp") {
-            const secondImage = `https://belatrizcolombia.com/app/public/template/shop/img/img_productos/${p.referencia}/PERFIL_2.webp`;
-            images.push(secondImage);
-        }
+        // No agregar segunda imagen en fallback - ya se maneja en getBasicProductImages
         
         console.log(`Producto ${p.referencia}: usando método fallback - imagen -> ${imageUrl}`);
     }
@@ -157,10 +180,10 @@ export const GET: APIRoute = async ({ url }) => {
             
             // La API externa devuelve: { respon: 200, total_registros: 607, detalles: [...] }
             if (data && data.detalles && Array.isArray(data.detalles)) {
-                const normalizedProducts = data.detalles.map(normalizeProduct);
+                const normalizedProducts = await Promise.all(data.detalles.map(normalizeProduct));
                 products = normalizedProducts.filter((p: Product | null) => p !== null);
             } else if (Array.isArray(data)) {
-                const normalizedProducts = data.map(normalizeProduct);
+                const normalizedProducts = await Promise.all(data.map(normalizeProduct));
                 products = normalizedProducts.filter((p: Product | null) => p !== null);
             } else {
                 console.warn("Estructura de datos inesperada:", Object.keys(data));

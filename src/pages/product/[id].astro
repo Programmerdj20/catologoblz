@@ -56,16 +56,10 @@ try {
             : baseUrl + productData.imagen;
           images.push(imageUrl);
           
-          // Agregar segunda imagen
-          if (productData.imagen === "PERFIL.webp") {
-            images.push(baseUrl + "PERFIL_2.webp");
-          } else {
-            const baseName = productData.imagen.replace(/\.[^/.]+$/, "");
-            const ext = productData.imagen.includes('.') ? productData.imagen.split('.').pop() : 'webp';
-            images.push(baseUrl + baseName + "_2." + ext);
-          }
+          // La segunda imagen ya viene del API catalogo.ts
         } else {
-          images = [baseUrl + 'PERFIL.webp', baseUrl + 'PERFIL_2.webp'];
+          // La segunda imagen ya viene del API catalogo.ts
+          images = [baseUrl + 'PERFIL.webp'];
         }
         
         product = {

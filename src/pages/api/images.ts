@@ -17,8 +17,7 @@ export const GET: APIRoute = async ({ url }) => {
         
         // Lista de nombres de archivos comunes que intentaremos buscar
         const commonImageNames = [
-            'PERFIL.webp',
-            'PERFIL_2.webp', 
+            'PERFIL.webp', 
             'PERFIL_3.webp',
             'PERFIL_4.webp',
             'PERFIL_5.webp',
@@ -73,10 +72,12 @@ export const GET: APIRoute = async ({ url }) => {
         // Ejecutar todas las verificaciones en paralelo
         await Promise.all(imageChecks);
 
+        // La segunda imagen ya se maneja en catalogo.ts
+
         // Ordenar las imágenes para que PERFIL.webp aparezca primero
         existingImages.sort((a, b) => {
-            const aIsPerfil = a.includes('PERFIL.webp') && !a.includes('_');
-            const bIsPerfil = b.includes('PERFIL.webp') && !b.includes('_');
+            const aIsPerfil = a.includes('PERFIL.webp');
+            const bIsPerfil = b.includes('PERFIL.webp');
             
             if (aIsPerfil && !bIsPerfil) return -1;
             if (!aIsPerfil && bIsPerfil) return 1;
