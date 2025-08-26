@@ -134,8 +134,6 @@ export default class ProductsApp {
     }
 
     const primaryImage = (product.images && product.images[0]) || '/assets/placeholder.svg';
-    const secondaryImage = (product.images && product.images[1]) || null;
-    const hasSecondImage = secondaryImage !== null;
     const title = product.title || 'Sin título';
     const sku = product.sku || 'N/A';
     const category = product.category || 'Sin categoría';
@@ -148,32 +146,15 @@ export default class ProductsApp {
             <img
               src="${this.escapeHtml(primaryImage)}"
               alt="${this.escapeHtml(title)}"
-              class="w-full h-full object-cover transition-all duration-500 ease-in-out ${hasSecondImage ? 'group-hover:opacity-0 group-hover:scale-105' : 'group-hover:scale-105'}"
+              class="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-110"
               onerror="this.src='/assets/placeholder.svg';"
             >
-            ${hasSecondImage ? `
-              <img
-                src="${this.escapeHtml(secondaryImage)}"
-                alt="${this.escapeHtml(title)} - vista alternativa"
-                class="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-500 ease-in-out group-hover:opacity-100 group-hover:scale-100"
-                onerror="this.style.display='none';"
-              >
-            ` : ''}
             <div class="absolute top-3 left-3">
               <span class="inline-block px-2 py-1 text-xs font-medium bg-white/90 text-gray-800 rounded-md backdrop-blur-sm shadow-sm">
                 ${this.escapeHtml(category)}
               </span>
             </div>
-            <div class="absolute inset-0 bg-gradient-to-t from-black/0 via-transparent to-black/0 group-hover:from-black/10 transition-all duration-300"></div>
-            ${hasSecondImage ? `
-              <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div class="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm">
-                  <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                  </svg>
-                </div>
-              </div>
-            ` : ''}
+            <div class="absolute inset-0 bg-gradient-to-t from-black/0 via-transparent to-black/0 group-hover:from-black/5 transition-all duration-300"></div>
           </div>
           <div class="p-4">
             <div class="text-xs text-gray-500 mb-1 font-mono">${this.escapeHtml(sku)}</div>

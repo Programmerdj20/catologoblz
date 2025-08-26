@@ -14,6 +14,31 @@ interface Product {
 
 const { id } = Astro.params;
 
+// Mapeo de categorías (copiado de catalogo.ts)
+const CATEGORY_MAP: Record<string, string> = {
+    "15": "Anillos",
+    "16": "Aretes", 
+    "17": "Cadenas",
+    "18": "Pulseras",
+    "19": "Collares",
+    "20": "Aretes",
+    "21": "Topos",
+    "22": "Gargantillas",
+    "23": "Dijes",
+    "24": "Pendientes",
+    "25": "Sortijas",
+    "26": "Esclavas",
+    "27": "Argollas",
+    "28": "Chokers",
+    "29": "Rosarios",
+    "30": "Medallas",
+    "31": "Cruces"
+};
+
+function getCategoryName(categoryId: string): string {
+    return CATEGORY_MAP[categoryId] || `Categoría ${categoryId}`;
+}
+
 // Fetch del producto específico
 let product: Product | null = null;
 let error: string | null = null;
@@ -46,31 +71,31 @@ try {
       });
       
       if (productData) {
-        // Normalizar el producto
-        const baseUrl = `https://belatrizcolombia.com/app/public/template/shop/img/img_productos/${productData.referencia}/`;
-        let images: string[] = [];
+        // Usar la API del catálogo para obtener el producto normalizado con imágenes
+        const catalogResponse = await fetch(`${new URL(Astro.request.url).origin}/api/catalogo?id=${encodeURIComponent(id || '')}`);
         
-        if (productData.imagen) {
-          const imageUrl = productData.imagen.startsWith('http') 
-            ? productData.imagen 
-            : baseUrl + productData.imagen;
-          images.push(imageUrl);
-          
-          // La segunda imagen ya viene del API catalogo.ts
-        } else {
-          // La segunda imagen ya viene del API catalogo.ts
-          images = [baseUrl + 'PERFIL.webp'];
+        if (catalogResponse.ok) {
+          const catalogProducts = await catalogResponse.json();
+          if (catalogProducts && catalogProducts.length > 0) {
+            product = catalogProducts[0];
+          }
         }
         
-        product = {
-          id: productData.referencia || productData.id || id,
-          title: productData.descripción || productData.descripcion || "Sin título",
-          sku: productData.referencia || id,
-          category: productData.categoría || productData.categoria || "Sin categoría",
-          description: productData.descripción || productData.descripcion || "Sin descripción",
-          images: images,
-          material: productData.material || "Oro Laminado 18K"
-        };
+        // Si no se pudo obtener del catálogo, crear producto básico
+        if (!product) {
+          const baseUrl = `https://belatrizcolombia.com/app/public/template/shop/img/img_productos/${productData.referencia}/`;
+          const images = [productData.imagen ? (productData.imagen.startsWith('http') ? productData.imagen : baseUrl + productData.imagen) : baseUrl + 'PERFIL.webp'];
+          
+          product = {
+            id: productData.referencia || productData.id || id,
+            title: productData.descripción || productData.descripcion || "Sin título",
+            sku: productData.referencia || id,
+            category: getCategoryName((productData.categoría || productData.categoria || "").toString()),
+            description: productData.descripción || productData.descripcion || "Sin descripción",
+            images: images,
+            material: productData.material || "Oro Laminado 18K"
+          };
+        }
       }
     }
   } else {
@@ -103,21 +128,72 @@ const pageDescription = product ? `${product.title} - ${product.material}. ${pro
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <!-- Galería de imágenes -->
           <div class="space-y-4">
-            <div class="aspect-square bg-gray-50 rounded-xl overflow-hidden">
-              <img 
-                id="main-image"
-                src={product.images[0]} 
-                alt={product.title}
-                class="w-full h-full object-cover cursor-zoom-in"
+            <!-- Imagen principal con controles -->
+            <div class="relative aspect-square bg-gray-50 rounded-xl overflow-hidden group">
+              <div id="image-slider" class="flex transition-transform duration-500 ease-in-out h-full">
+                {product.images.map((image: string, index: number) => (
+                  <div class="w-full h-full flex-shrink-0">
+                    <img 
+                      src={image} 
+                      alt={`${product.title} - vista ${index + 1}`}
+                      class="w-full h-full object-cover"
+                    >
+                  </div>
+                ))}
+              </div>
+              
+              <!-- Botón maximizar -->
+              <button 
+                id="maximize-btn"
+                class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow-sm opacity-70 group-hover:opacity-100 transition-opacity hover:bg-white z-10"
               >
+                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                </svg>
+              </button>
+
+              <!-- Controles de navegación -->
+              {product.images.length > 1 && (
+                <>
+                  <button 
+                    id="prev-btn"
+                    class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-sm opacity-70 group-hover:opacity-100 transition-opacity hover:bg-white z-10"
+                  >
+                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                  </button>
+                  <button 
+                    id="next-btn"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-sm opacity-70 group-hover:opacity-100 transition-opacity hover:bg-white z-10"
+                  >
+                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                  </button>
+                </>
+              )}
+
+              <!-- Indicadores -->
+              {product.images.length > 1 && (
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                  {product.images.map((_, index: number) => (
+                    <button 
+                      class="indicator w-2 h-2 rounded-full bg-white/50 transition-all hover:bg-white"
+                      data-index={index}
+                    ></button>
+                  ))}
+                </div>
+              )}
             </div>
             
+            <!-- Thumbnails -->
             {product.images.length > 1 && (
-              <div class="grid grid-cols-4 gap-3">
-                {product.images.slice(0, 4).map((image: string, index: number) => (
+              <div class="grid grid-cols-5 gap-3">
+                {product.images.map((image: string, index: number) => (
                   <button 
                     class="thumbnail aspect-square bg-gray-50 rounded-lg overflow-hidden border-2 border-transparent hover:border-gold-300 transition-colors"
-                    data-image={image}
+                    data-index={index}
                   >
                     <img 
                       src={image} 
@@ -128,6 +204,26 @@ const pageDescription = product ? `${product.title} - ${product.material}. ${pro
                 ))}
               </div>
             )}
+          </div>
+
+          <!-- Modal de maximizar -->
+          <div id="image-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+            <div class="relative max-w-4xl max-h-full">
+              <button 
+                id="close-modal"
+                class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
+              >
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+              <img 
+                id="modal-image" 
+                src="" 
+                alt="" 
+                class="max-w-full max-h-full object-contain"
+              >
+            </div>
           </div>
 
           <!-- Información del producto -->
@@ -208,32 +304,143 @@ const pageDescription = product ? `${product.title} - ${product.material}. ${pro
   </div>
 
   {product && (
-    <script is:inline>
+    <script is:inline define:vars={{ productImages: product.images, productTitle: product.title }}>
       document.addEventListener('DOMContentLoaded', function() {
-        const mainImage = document.getElementById('main-image');
+        console.log('Inicializando slider de producto...');
+        
+        const slider = document.getElementById('image-slider');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const maximizeBtn = document.getElementById('maximize-btn');
+        const modal = document.getElementById('image-modal');
+        const modalImage = document.getElementById('modal-image');
+        const closeModal = document.getElementById('close-modal');
         const thumbnails = document.querySelectorAll('.thumbnail');
-
-        if (!mainImage || !thumbnails.length) return;
-
-        thumbnails.forEach(function(thumb) {
-          thumb.addEventListener('click', function() {
-            const newSrc = thumb.getAttribute('data-image');
-            if (newSrc && mainImage) {
-              mainImage.src = newSrc;
-
-              // Update active state
-              thumbnails.forEach(function(t) {
-                t.classList.remove('border-gold-300');
-              });
-              thumb.classList.add('border-gold-300');
+        const indicators = document.querySelectorAll('.indicator');
+        
+        console.log('Elementos encontrados:', {
+          slider: !!slider,
+          prevBtn: !!prevBtn,
+          nextBtn: !!nextBtn,
+          maximizeBtn: !!maximizeBtn,
+          thumbnails: thumbnails.length,
+          indicators: indicators.length
+        });
+        
+        let currentIndex = 0;
+        const totalImages = productImages.length;
+        
+        function updateSlider() {
+          if (!slider) return;
+          const translateX = -currentIndex * 100;
+          slider.style.transform = `translateX(${translateX}%)`;
+          
+          // Actualizar indicadores
+          indicators.forEach((indicator, index) => {
+            if (index === currentIndex) {
+              indicator.classList.add('bg-white');
+              indicator.classList.remove('bg-white/50');
+            } else {
+              indicator.classList.remove('bg-white');
+              indicator.classList.add('bg-white/50');
             }
           });
-        });
-
-        // Mark first thumbnail as active
-        if (thumbnails.length > 0) {
-          thumbnails[0].classList.add('border-gold-300');
+          
+          // Actualizar thumbnails
+          thumbnails.forEach((thumb, index) => {
+            if (index === currentIndex) {
+              thumb.classList.add('border-gold-600');
+              thumb.classList.remove('border-transparent');
+            } else {
+              thumb.classList.remove('border-gold-600');
+              thumb.classList.add('border-transparent');
+            }
+          });
         }
+        
+        function nextImage() {
+          console.log('Siguiente imagen:', currentIndex, '->', (currentIndex + 1) % totalImages);
+          currentIndex = (currentIndex + 1) % totalImages;
+          updateSlider();
+        }
+        
+        function prevImage() {
+          console.log('Imagen anterior:', currentIndex, '->', (currentIndex - 1 + totalImages) % totalImages);
+          currentIndex = (currentIndex - 1 + totalImages) % totalImages;
+          updateSlider();
+        }
+        
+        function goToImage(index) {
+          currentIndex = index;
+          updateSlider();
+        }
+        
+        // Event listeners
+        if (nextBtn) {
+          console.log('Agregando listener al botón siguiente');
+          nextBtn.addEventListener('click', function() {
+            console.log('Click en botón siguiente');
+            nextImage();
+          });
+        }
+        
+        if (prevBtn) {
+          console.log('Agregando listener al botón anterior');
+          prevBtn.addEventListener('click', function() {
+            console.log('Click en botón anterior');
+            prevImage();
+          });
+        }
+        
+        thumbnails.forEach((thumb, index) => {
+          thumb.addEventListener('click', () => goToImage(index));
+        });
+        
+        indicators.forEach((indicator, index) => {
+          indicator.addEventListener('click', () => goToImage(index));
+        });
+        
+        // Modal functionality
+        if (maximizeBtn && modal && modalImage) {
+          maximizeBtn.addEventListener('click', function() {
+            console.log('Click en maximizar, imagen actual:', currentIndex);
+            modalImage.src = productImages[currentIndex];
+            modalImage.alt = productTitle + ' - vista maximizada';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+          });
+        }
+        
+        if (closeModal && modal) {
+          closeModal.addEventListener('click', function() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+          });
+        }
+        
+        if (modal) {
+          modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+              modal.classList.add('hidden');
+              modal.classList.remove('flex');
+            }
+          });
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'ArrowLeft' && totalImages > 1) {
+            prevImage();
+          } else if (e.key === 'ArrowRight' && totalImages > 1) {
+            nextImage();
+          } else if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+          }
+        });
+        
+        // Initialize
+        updateSlider();
       });
     </script>
   )}

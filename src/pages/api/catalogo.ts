@@ -39,7 +39,7 @@ function getCategoryName(categoryId: string): string {
     return CATEGORY_MAP[categoryId] || `Categoría ${categoryId}`;
 }
 
-async function getBasicProductImages(referencia: string, imagen?: string): Promise<string[]> {
+async function getBasicProductImages(referencia: string, imagen?: string, includeSecondImage: boolean = false): Promise<string[]> {
     const images: string[] = [];
     const baseUrl = `https://belatrizcolombia.com/app/public/template/shop/img/img_productos/${referencia}/`;
     
@@ -54,41 +54,47 @@ async function getBasicProductImages(referencia: string, imagen?: string): Promi
         images.push('/assets/placeholder.svg');
     }
     
-    // Obtener segunda imagen dinámicamente del directorio
-    try {
-        const authHeader = basicAuthHeader("1037614143", "1037614143");
-        const directoryUrl = baseUrl;
-        
-        const response = await fetch(directoryUrl, {
-            method: "GET",
-            headers: {
-                "Authorization": authHeader,
-                "User-Agent": "Mozilla/5.0 (compatible; JewelryCatalog/1.0)",
-            },
-            signal: AbortSignal.timeout(5000)
-        });
-
-        if (response.ok) {
-            const html = await response.text();
-            const imageFiles = [];
-            const lines = html.split('\n');
+    // Solo obtener segunda imagen si se solicita explícitamente (para páginas de producto)
+    if (includeSecondImage) {
+        try {
+            const authHeader = basicAuthHeader("1037614143", "1037614143");
+            const directoryUrl = baseUrl;
             
-            for (const line of lines) {
-                const match = line.match(/<a href="([^"]+\.(jpg|jpeg|png|webp|gif))">/i);
-                if (match) {
-                    imageFiles.push(match[1]);
+            const response = await fetch(directoryUrl, {
+                method: "GET",
+                headers: {
+                    "Authorization": authHeader,
+                    "User-Agent": "Mozilla/5.0 (compatible; JewelryCatalog/1.0)",
+                },
+                signal: AbortSignal.timeout(3000)
+            });
+
+            if (response.ok) {
+                const html = await response.text();
+                const imageFiles = [];
+                const lines = html.split('\n');
+                
+                for (const line of lines) {
+                    const match = line.match(/<a href="([^"]+\.(jpg|jpeg|png|webp|gif))">/i);
+                    if (match) {
+                        imageFiles.push(match[1]);
+                    }
+                }
+                
+                // Agregar todas las imágenes encontradas (para galería completa)
+                if (imageFiles.length > 0) {
+                    for (const imageFile of imageFiles) {
+                        const imageUrl = baseUrl + imageFile;
+                        if (!images.includes(imageUrl)) {
+                            images.push(imageUrl);
+                        }
+                    }
+                    console.log(`${imageFiles.length} imágenes adicionales encontradas para ${referencia}`);
                 }
             }
-            
-            // Tomar la primera imagen que encuentre para usarla como segunda
-            if (imageFiles.length > 0) {
-                const segundaImagenUrl = baseUrl + imageFiles[0];
-                images.push(segundaImagenUrl);
-                console.log(`Segunda imagen encontrada para ${referencia}: ${imageFiles[0]}`);
-            }
+        } catch (error) {
+            console.log(`No se pudieron obtener imágenes adicionales para ${referencia}:`, error);
         }
-    } catch (error) {
-        console.log(`No se pudo obtener segunda imagen para ${referencia}:`, error);
     }
     
     return images;
@@ -170,7 +176,7 @@ export const GET: APIRoute = async ({ url }) => {
         const response = await fetch(API_URL, {
             method: "GET",
             headers,
-            signal: AbortSignal.timeout(10000)
+            signal: AbortSignal.timeout(8000)
         });
 
         if (response.ok) {
@@ -180,10 +186,32 @@ export const GET: APIRoute = async ({ url }) => {
             
             // La API externa devuelve: { respon: 200, total_registros: 607, detalles: [...] }
             if (data && data.detalles && Array.isArray(data.detalles)) {
-                const normalizedProducts = await Promise.all(data.detalles.map(normalizeProduct));
+                // Procesar en lotes más grandes para mayor velocidad
+                const batchSize = 50;
+                const batches = [];
+                for (let i = 0; i < data.detalles.length; i += batchSize) {
+                    batches.push(data.detalles.slice(i, i + batchSize));
+                }
+                
+                const normalizedProducts = [];
+                for (const batch of batches) {
+                    const batchResults = await Promise.all(batch.map(normalizeProduct));
+                    normalizedProducts.push(...batchResults);
+                }
                 products = normalizedProducts.filter((p: Product | null) => p !== null);
             } else if (Array.isArray(data)) {
-                const normalizedProducts = await Promise.all(data.map(normalizeProduct));
+                // Procesar en lotes más grandes para mayor velocidad
+                const batchSize = 50;
+                const batches = [];
+                for (let i = 0; i < data.length; i += batchSize) {
+                    batches.push(data.slice(i, i + batchSize));
+                }
+                
+                const normalizedProducts = [];
+                for (const batch of batches) {
+                    const batchResults = await Promise.all(batch.map(normalizeProduct));
+                    normalizedProducts.push(...batchResults);
+                }
                 products = normalizedProducts.filter((p: Product | null) => p !== null);
             } else {
                 console.warn("Estructura de datos inesperada:", Object.keys(data));
@@ -193,6 +221,10 @@ export const GET: APIRoute = async ({ url }) => {
             // Si se solicita un producto específico
             if (id) {
                 const product = products.find(p => p.id === id || p.sku === id);
+                if (product) {
+                    // Para producto específico, buscar todas las imágenes
+                    product.images = await getBasicProductImages(product.sku, product.images[0]?.split('/').pop(), true);
+                }
                 return new Response(JSON.stringify(product ? [product] : []), {
                     status: 200,
                     headers: { "Content-Type": "application/json" },
