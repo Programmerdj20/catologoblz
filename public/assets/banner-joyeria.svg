@@ -1,0 +1,67 @@
+<svg width="640" height="400" viewBox="0 0 640 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF8C00;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFF8DC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F5F5DC;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="640" height="400" fill="url(#bgGradient)"/>
+  
+  <!-- Decorative elements -->
+  <circle cx="100" cy="80" r="3" fill="url(#goldGradient)" opacity="0.6"/>
+  <circle cx="540" cy="120" r="2" fill="url(#goldGradient)" opacity="0.4"/>
+  <circle cx="580" cy="300" r="4" fill="url(#goldGradient)" opacity="0.5"/>
+  <circle cx="60" cy="320" r="2" fill="url(#goldGradient)" opacity="0.3"/>
+  
+  <!-- Main jewelry elements -->
+  <!-- Ring -->
+  <g transform="translate(150, 150)">
+    <circle cx="0" cy="0" r="40" stroke="url(#goldGradient)" stroke-width="8" fill="none" filter="url(#glow)"/>
+    <circle cx="0" cy="-35" r="8" fill="url(#goldGradient)" filter="url(#glow)"/>
+  </g>
+  
+  <!-- Necklace -->
+  <g transform="translate(320, 200)">
+    <path d="M-60,-20 Q-30,-40 0,-20 Q30,-40 60,-20" stroke="url(#goldGradient)" stroke-width="4" fill="none" filter="url(#glow)"/>
+    <circle cx="0" cy="-15" r="12" fill="url(#goldGradient)" filter="url(#glow)"/>
+    <path d="M-8,-15 L0,-25 L8,-15 Z" fill="#FFD700"/>
+  </g>
+  
+  <!-- Earrings -->
+  <g transform="translate(480, 160)">
+    <circle cx="-15" cy="0" r="6" fill="url(#goldGradient)" filter="url(#glow)"/>
+    <rect x="-18" y="8" width="6" height="20" rx="3" fill="url(#goldGradient)" filter="url(#glow)"/>
+    <circle cx="15" cy="0" r="6" fill="url(#goldGradient)" filter="url(#glow)"/>
+    <rect x="12" y="8" width="6" height="20" rx="3" fill="url(#goldGradient)" filter="url(#glow)"/>
+  </g>
+  
+  <!-- Sparkles -->
+  <g fill="url(#goldGradient)" opacity="0.7">
+    <path d="M200,100 L202,106 L208,108 L202,110 L200,116 L198,110 L192,108 L198,106 Z"/>
+    <path d="M450,250 L451,254 L455,255 L451,256 L450,260 L449,256 L445,255 L449,254 Z"/>
+    <path d="M120,280 L121,283 L124,284 L121,285 L120,288 L119,285 L116,284 L119,283 Z"/>
+    <path d="M520,180 L521,183 L524,184 L521,185 L520,188 L519,185 L516,184 L519,183 Z"/>
+  </g>
+  
+  <!-- Text overlay -->
+  <text x="320" y="350" text-anchor="middle" fill="#B8860B" font-family="serif" font-size="24" font-weight="bold">
+    JOYERÍA BELATRIZ
+  </text>
+  <text x="320" y="375" text-anchor="middle" fill="#DAA520" font-family="serif" font-size="16">
+    Oro Laminado 18K
+  </text>
+</svg>

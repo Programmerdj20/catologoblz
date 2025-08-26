@@ -1,0 +1,190 @@
+---
+import Layout from '../../components/Layout.astro';
+import Header from '../../components/Header.astro';
+
+interface Product {
+  id: string;
+  title: string;
+  sku: string;
+  category: string;
+  description: string;
+  images: string[];
+  material: string;
+}
+
+const { id } = Astro.params;
+
+// Fetch del producto específico
+let product: Product | null = null;
+let error: string | null = null;
+
+try {
+  const response = await fetch(`${Astro.url.origin}/api/catalogo?id=${encodeURIComponent(id || '')}`);
+  if (response.ok) {
+    const products = await response.json();
+    product = products && products.length > 0 ? products[0] : null;
+  } else {
+    error = `Error ${response.status}: ${response.statusText}`;
+  }
+} catch (e: any) {
+  error = e.message;
+  console.error('Error fetching product:', e);
+}
+
+const pageTitle = product ? `${product.title} - Joyería Belatriz` : 'Producto no encontrado';
+const pageDescription = product ? `${product.title} - ${product.material}. ${product.description}` : 'Producto no encontrado en nuestro catálogo.';
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <Header />
+  
+  <div class="container py-8">
+    {product ? (
+      <div class="max-w-6xl mx-auto">
+        <!-- Breadcrumb -->
+        <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-8">
+          <a href="/" class="hover:text-gold-600 transition-colors">Inicio</a>
+          <span>/</span>
+          <span class="text-gray-400">{product.category}</span>
+          <span>/</span>
+          <span class="text-gray-900 font-medium">{product.title}</span>
+        </nav>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <!-- Galería de imágenes -->
+          <div class="space-y-4">
+            <div class="aspect-square bg-gray-50 rounded-xl overflow-hidden">
+              <img 
+                id="main-image"
+                src={product.images[0]} 
+                alt={product.title}
+                class="w-full h-full object-cover cursor-zoom-in"
+              >
+            </div>
+            
+            {product.images.length > 1 && (
+              <div class="grid grid-cols-4 gap-3">
+                {product.images.slice(0, 4).map((image: string, index: number) => (
+                  <button 
+                    class="thumbnail aspect-square bg-gray-50 rounded-lg overflow-hidden border-2 border-transparent hover:border-gold-300 transition-colors"
+                    data-image={image}
+                  >
+                    <img 
+                      src={image} 
+                      alt={`${product.title} - vista ${index + 1}`}
+                      class="w-full h-full object-cover"
+                    >
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <!-- Información del producto -->
+          <div class="space-y-6">
+            <div>
+              <div class="text-sm text-gray-500 mb-2">{product.sku}</div>
+              <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                {product.title}
+              </h1>
+              
+              <div class="flex flex-wrap gap-3 mb-6">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gold-100 text-gold-800">
+                  {product.category}
+                </span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                  {product.material}
+                </span>
+              </div>
+            </div>
+
+            {product.description && (
+              <div class="prose prose-gray max-w-none">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Descripción</h3>
+                <p class="text-gray-700 leading-relaxed">{product.description}</p>
+              </div>
+            )}
+
+            <!-- Características -->
+            <div class="bg-gray-50 rounded-xl p-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4">Características</h3>
+              <dl class="space-y-3">
+                <div class="flex justify-between">
+                  <dt class="text-gray-600">Material:</dt>
+                  <dd class="font-medium text-gray-900">{product.material}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-gray-600">Categoría:</dt>
+                  <dd class="font-medium text-gray-900">{product.category}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-gray-600">Referencia:</dt>
+                  <dd class="font-medium text-gray-900">{product.sku}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <!-- Botón de regreso -->
+            <div class="pt-6">
+              <a 
+                href="/" 
+                class="inline-flex items-center px-6 py-3 bg-gold-600 text-white font-medium rounded-lg hover:bg-gold-700 transition-colors duration-200"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Volver al catálogo
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    ) : (
+      <div class="text-center py-16">
+        <div class="text-6xl mb-4">😔</div>
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Producto no encontrado</h1>
+        <p class="text-gray-600 mb-8">El producto que buscas no existe o ha sido removido del catálogo.</p>
+        {error && (
+          <p class="text-sm text-red-600 mb-4">Error: {error}</p>
+        )}
+        <a 
+          href="/" 
+          class="inline-flex items-center px-6 py-3 bg-gold-600 text-white font-medium rounded-lg hover:bg-gold-700 transition-colors duration-200"
+        >
+          Volver al catálogo
+        </a>
+      </div>
+    )}
+  </div>
+
+  {product && (
+    <script is:inline>
+      document.addEventListener('DOMContentLoaded', function() {
+        const mainImage = document.getElementById('main-image');
+        const thumbnails = document.querySelectorAll('.thumbnail');
+
+        if (!mainImage || !thumbnails.length) return;
+
+        thumbnails.forEach(function(thumb) {
+          thumb.addEventListener('click', function() {
+            const newSrc = thumb.getAttribute('data-image');
+            if (newSrc && mainImage) {
+              mainImage.src = newSrc;
+
+              // Update active state
+              thumbnails.forEach(function(t) {
+                t.classList.remove('border-gold-300');
+              });
+              thumb.classList.add('border-gold-300');
+            }
+          });
+        });
+
+        // Mark first thumbnail as active
+        if (thumbnails.length > 0) {
+          thumbnails[0].classList.add('border-gold-300');
+        }
+      });
+    </script>
+  )}
+</Layout>

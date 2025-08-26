@@ -1,16 +1,44 @@
 ---
-
+import Layout from '../components/Layout.astro';
+import Header from '../components/Header.astro';
+import Banner from '../components/Banner.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout>
+  <Header />
+
+  <div class="container py-8">
+    <Banner />
+
+    <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
+      <!-- Sidebar de categorías -->
+      <aside class="xl:col-span-1">
+        <div id="categories-root"></div>
+      </aside>
+
+      <!-- Grid de productos -->
+      <main class="xl:col-span-4">
+        <div id="products-root"></div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    import ProductsApp from '../components/ProductsApp.js';
+    import CategoriesApp from '../components/CategoriesApp.js';
+
+    // Inicializar aplicaciones
+    document.addEventListener('DOMContentLoaded', () => {
+      const categoriesRoot = document.getElementById('categories-root');
+      const productsRoot = document.getElementById('products-root');
+      
+      if (categoriesRoot && productsRoot) {
+        new CategoriesApp({ target: categoriesRoot });
+        new ProductsApp({ 
+          target: productsRoot, 
+          props: { searchInputSelector: '#search' } 
+        });
+      }
+    });
+  </script>
+</Layout>
