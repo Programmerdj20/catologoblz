@@ -19,10 +19,66 @@ let product: Product | null = null;
 let error: string | null = null;
 
 try {
-  const response = await fetch(`${Astro.url.origin}/api/catalogo?id=${encodeURIComponent(id || '')}`);
+  // Usar API interna directamente para mejor rendimiento
+  const API_URL = "https://belatrizcolombia.com/apirest/public/catalago2";
+  const API_USER = "a2ya10afP9TJVCL2Geh/8IUoGbfcOiEnzi1q5WQDx7G1sjIBo8OfU19rW4OK";
+  const API_PASS = "o2yo12oF6T3Hfv.kPLtJKvO3BQE4esRQT3gB86F7GV6ADJAT55zgaNgTEB3m";
+  
+  const authHeader = "Basic " + Buffer.from(`${API_USER}:${API_PASS}`).toString("base64");
+  
+  const response = await fetch(API_URL, {
+    method: "GET",
+    headers: {
+      "Accept": "application/json",
+      "Authorization": authHeader,
+      "User-Agent": "Mozilla/5.0 (compatible; JewelryCatalog/1.0)",
+    }
+  });
+  
   if (response.ok) {
-    const products = await response.json();
-    product = products && products.length > 0 ? products[0] : null;
+    const data = await response.json();
+    
+    // Buscar el producto específico
+    if (data && data.detalles && Array.isArray(data.detalles)) {
+      const productData = data.detalles.find((p: any) => {
+        const productId = p.referencia || p.id || p.ID || p.ref;
+        return productId === id;
+      });
+      
+      if (productData) {
+        // Normalizar el producto
+        const baseUrl = `https://belatrizcolombia.com/app/public/template/shop/img/img_productos/${productData.referencia}/`;
+        let images: string[] = [];
+        
+        if (productData.imagen) {
+          const imageUrl = productData.imagen.startsWith('http') 
+            ? productData.imagen 
+            : baseUrl + productData.imagen;
+          images.push(imageUrl);
+          
+          // Agregar segunda imagen
+          if (productData.imagen === "PERFIL.webp") {
+            images.push(baseUrl + "PERFIL_2.webp");
+          } else {
+            const baseName = productData.imagen.replace(/\.[^/.]+$/, "");
+            const ext = productData.imagen.includes('.') ? productData.imagen.split('.').pop() : 'webp';
+            images.push(baseUrl + baseName + "_2." + ext);
+          }
+        } else {
+          images = [baseUrl + 'PERFIL.webp', baseUrl + 'PERFIL_2.webp'];
+        }
+        
+        product = {
+          id: productData.referencia || productData.id || id,
+          title: productData.descripción || productData.descripcion || "Sin título",
+          sku: productData.referencia || id,
+          category: productData.categoría || productData.categoria || "Sin categoría",
+          description: productData.descripción || productData.descripcion || "Sin descripción",
+          images: images,
+          material: productData.material || "Oro Laminado 18K"
+        };
+      }
+    }
   } else {
     error = `Error ${response.status}: ${response.statusText}`;
   }

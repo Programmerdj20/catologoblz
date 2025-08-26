@@ -123,8 +123,8 @@ export default class ProductsApp {
       </div>
     `;
 
-    // Aplicar lazy loading después de renderizar
-    this.setupLazyLoading();
+    // Temporalmente desactivado para debuggear
+    // this.setupLazyLoading();
   }
 
   renderProductCard(product) {
@@ -134,8 +134,8 @@ export default class ProductsApp {
     }
 
     const primaryImage = (product.images && product.images[0]) || '/assets/placeholder.svg';
-    const secondaryImage = (product.images && product.images[1]) || primaryImage;
-    const hasSecondImage = product.images && product.images.length > 1;
+    const secondaryImage = (product.images && product.images[1]) || null;
+    const hasSecondImage = secondaryImage !== null;
     const title = product.title || 'Sin título';
     const sku = product.sku || 'N/A';
     const category = product.category || 'Sin categoría';
@@ -146,19 +146,17 @@ export default class ProductsApp {
         <a href="/product/${encodeURIComponent(product.id)}" class="block">
           <div class="relative overflow-hidden aspect-square bg-gray-50">
             <img
-              data-src="${this.escapeHtml(primaryImage)}"
+              src="${this.escapeHtml(primaryImage)}"
               alt="${this.escapeHtml(title)}"
-              class="lazy-image w-full h-full object-cover transition-all duration-500 ease-in-out ${hasSecondImage ? 'group-hover:opacity-0 group-hover:scale-105' : 'group-hover:scale-105'} opacity-0"
-              src="/assets/placeholder.svg"
-              onerror="this.src='/assets/placeholder.svg'"
+              class="w-full h-full object-cover transition-all duration-500 ease-in-out ${hasSecondImage ? 'group-hover:opacity-0 group-hover:scale-105' : 'group-hover:scale-105'}"
+              onerror="this.src='/assets/placeholder.svg';"
             >
             ${hasSecondImage ? `
               <img
-                data-src="${this.escapeHtml(secondaryImage)}"
+                src="${this.escapeHtml(secondaryImage)}"
                 alt="${this.escapeHtml(title)} - vista alternativa"
-                class="lazy-image absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-500 ease-in-out group-hover:opacity-100 group-hover:scale-100"
-                src="/assets/placeholder.svg"
-                onerror="this.src='/assets/placeholder.svg'"
+                class="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-500 ease-in-out group-hover:opacity-100 group-hover:scale-100"
+                onerror="this.style.display='none';"
               >
             ` : ''}
             <div class="absolute top-3 left-3">
@@ -195,6 +193,7 @@ export default class ProductsApp {
       </article>
     `;
   }
+
 
   renderLoading() {
     return `
@@ -259,8 +258,7 @@ export default class ProductsApp {
         const src = img.getAttribute('data-src');
         if (src) {
           img.src = src;
-          img.classList.remove('opacity-0');
-          img.classList.add('opacity-100');
+          img.style.opacity = '1';
         }
       });
       return;
@@ -277,14 +275,12 @@ export default class ProductsApp {
             const newImg = new Image();
             newImg.onload = () => {
               img.src = src;
-              img.classList.remove('opacity-0');
-              img.classList.add('opacity-100');
+              img.style.opacity = '1';
               observer.unobserve(img);
             };
             newImg.onerror = () => {
               img.src = '/assets/placeholder.svg';
-              img.classList.remove('opacity-0');
-              img.classList.add('opacity-100');
+              img.style.opacity = '1';
               observer.unobserve(img);
             };
             newImg.src = src;
@@ -299,6 +295,7 @@ export default class ProductsApp {
 
     lazyImages.forEach(img => imageObserver.observe(img));
   }
+
 
   escapeHtml(text) {
     const map = {
