@@ -16,14 +16,14 @@ function basicAuthHeader(user: string, pass: string): string {
 // Mapeo de IDs de categoría a nombres legibles
 const CATEGORY_MAP: Record<string, string> = {
     "15": "Anillos",
-    "23": "Dijes", 
     "16": "Aretes",
     "17": "Cadenas",
     "18": "Pulseras",
     "19": "Collares",
-    "20": "Conjuntos",
+    "20": "Aretes",
     "21": "Topos",
     "22": "Gargantillas",
+    "23": "Dijes",
     "24": "Pendientes",
     "25": "Sortijas",
     "26": "Esclavas",
