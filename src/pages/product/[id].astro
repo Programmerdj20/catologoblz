@@ -120,7 +120,7 @@ const pageDescription = product ? `${product.title} - ${product.material}. ${pro
         <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-8 mt-6">
           <a href="/" class="hover:text-gold-600 transition-colors">Inicio</a>
           <span>/</span>
-          <span class="text-gray-400">{product.category}</span>
+          <a href={`/?category=${encodeURIComponent(product.category)}`} class="hover:text-gold-600 transition-colors">{product.category}</a>
           <span>/</span>
           <span class="text-gray-900 font-medium">{product.title}</span>
         </nav>

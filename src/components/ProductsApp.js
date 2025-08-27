@@ -14,6 +14,7 @@ export default class ProductsApp {
     this.render();
     this.bindEvents();
     await this.fetchProducts();
+    this.handleURLCategory();
   }
 
   bindEvents() {
@@ -300,6 +301,19 @@ export default class ProductsApp {
       "'": '&#039;'
     };
     return String(text || '').replace(/[&<>"']/g, m => map[m]);
+  }
+
+  handleURLCategory() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryFromURL = urlParams.get('category');
+    
+    if (categoryFromURL) {
+      this.currentCategory = decodeURIComponent(categoryFromURL);
+      this.filterProducts();
+      
+      // Disparar evento para actualizar UI de categorías
+      window.dispatchEvent(new CustomEvent('category-selected', { detail: this.currentCategory }));
+    }
   }
 
   destroy() {
