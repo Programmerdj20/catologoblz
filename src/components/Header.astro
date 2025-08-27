@@ -35,7 +35,7 @@
         </div>
         
         <!-- Dropdown de resultados -->
-        <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-96 overflow-y-auto hidden z-50">
+        <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-96 overflow-y-auto hidden z-[9999]">
           <div id="search-results-content"></div>
         </div>
       </div>
@@ -74,9 +74,20 @@
     id="mobile-menu" 
     class="xl:hidden absolute top-full left-0 right-0 bg-white border-t border-gray-200 shadow-lg transform transition-all duration-300 ease-in-out origin-top scale-y-0 opacity-0 z-40"
   >
-    <div class="container py-4">
+    <div class="container py-6">
+      <!-- Categorías -->
+      <div class="mb-6">
+        <h3 class="text-sm font-semibold text-gray-900 mb-4 mt-2 flex items-center gap-2">
+          <div class="w-1 h-4 bg-gradient-to-b from-gold-400 to-gold-600 rounded-full"></div>
+          CATEGORÍAS
+        </h3>
+        <div id="mobile-categories-list" class="space-y-1">
+          <!-- Las categorías se cargarán aquí dinámicamente -->
+        </div>
+      </div>
+      
       <!-- Barra de búsqueda móvil -->
-      <div class="mt-4 mb-4 relative">
+      <div class="mt-6 mb-2 relative">
         <div class="relative">
           <input 
             id="mobile-search" 
@@ -93,19 +104,8 @@
         </div>
         
         <!-- Dropdown de resultados móvil -->
-        <div id="mobile-search-results" class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-80 overflow-y-auto hidden z-50">
+        <div id="mobile-search-results" class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-80 overflow-y-auto hidden z-[9999]">
           <div id="mobile-search-results-content"></div>
-        </div>
-      </div>
-      
-      <!-- Categorías -->
-      <div>
-        <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-          <div class="w-1 h-4 bg-gradient-to-b from-gold-400 to-gold-600 rounded-full"></div>
-          CATEGORÍAS
-        </h3>
-        <div id="mobile-categories-list" class="space-y-1">
-          <!-- Las categorías se cargarán aquí dinámicamente -->
         </div>
       </div>
     </div>
@@ -178,11 +178,6 @@
     
     handleSearch(query, isMobile) {
       clearTimeout(this.searchTimeout);
-      
-      // Disparar evento para filtrar productos en el home
-      if (window.location.pathname === '/') {
-        window.dispatchEvent(new CustomEvent('global-search', { detail: query }));
-      }
       
       if (query.length < this.minSearchLength) {
         this.hideResults(isMobile);
