@@ -16,27 +16,23 @@ function basicAuthHeader(user: string, pass: string): string {
 
 // Mapeo de IDs de categoría a nombres legibles
 const CATEGORY_MAP: Record<string, string> = {
-    "15": "Anillos",
-    "16": "Aretes",
-    "17": "Cadenas",
+    "15": "Exclusividades",
+    "16": "Rosarios",
+    "17": "Tobilleras",
     "18": "Pulseras",
-    "19": "Collares",
+    "19": "Cadenas",
     "20": "Aretes",
-    "21": "Topos",
-    "22": "Gargantillas",
+    "21": "Cruceros",
+    "22": "Herrajes",
     "23": "Dijes",
-    "24": "Pendientes",
-    "25": "Sortijas",
-    "26": "Esclavas",
-    "27": "Argollas",
-    "28": "Chokers",
-    "29": "Rosarios",
-    "30": "Medallas",
-    "31": "Cruces"
+    "25": "Conjuntos",
+    "27": "Otros",
+    "29": "Anillos",
+    "31": "Diferencial"
 };
 
 function getCategoryName(categoryId: string): string {
-    return CATEGORY_MAP[categoryId] || `Categoría ${categoryId}`;
+    return CATEGORY_MAP[categoryId] || null;
 }
 
 async function getBasicProductImages(referencia: string, imagen?: string, includeSecondImage: boolean = false): Promise<string[]> {
@@ -119,6 +115,12 @@ async function normalizeProduct(p: any): Promise<Product | null> {
     const sku = p.referencia || p.sku || p.ref || p.codigo || id;
     const categoryId = p.categoría || p.categoria || p.category || p.linea || p.tipo || "Sin categoría";
     const category = getCategoryName(categoryId.toString());
+    
+    // Descartar productos sin categoría válida
+    if (!category) {
+        return null;
+    }
+    
     const description = p.descripción || p.descripcion || p.description || p.descripcionLarga || title;
 
     // Usar el nuevo servicio de imágenes para obtener todas las imágenes disponibles

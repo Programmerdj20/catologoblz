@@ -118,7 +118,7 @@ export default class ProductsApp {
     }
 
     this.target.innerHTML = `
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-stagger-in">
+      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-stagger-in">
         ${this.filteredProducts.map(product => this.renderProductCard(product)).join('')}
       </div>
     `;
@@ -178,7 +178,7 @@ export default class ProductsApp {
 
   renderLoading() {
     return `
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-stagger-in">
+      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-stagger-in">
         ${Array(6).fill(0).map((_, index) => `
           <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100" style="animation-delay: ${index * 100}ms">
             <div class="aspect-square loading-shimmer bg-gray-100"></div>

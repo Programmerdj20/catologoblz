@@ -10,9 +10,10 @@ import Banner from '../components/Banner.astro';
   <div class="container py-8">
     <Banner />
 
+
     <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
-      <!-- Sidebar de categorías -->
-      <aside class="xl:col-span-1">
+      <!-- Sidebar de categorías desktop -->
+      <aside class="hidden xl:block xl:col-span-1 sticky top-28 self-start">
         <div id="categories-root"></div>
       </aside>
 
@@ -32,13 +33,111 @@ import Banner from '../components/Banner.astro';
       const categoriesRoot = document.getElementById('categories-root');
       const productsRoot = document.getElementById('products-root');
       
-      if (categoriesRoot && productsRoot) {
-        new CategoriesApp({ target: categoriesRoot });
+      if (productsRoot) {
+        // Inicializar versión desktop de categorías
+        if (categoriesRoot) {
+          new CategoriesApp({ target: categoriesRoot, props: { isMobile: false } });
+        }
+        
+        // Inicializar productos
         new ProductsApp({ 
           target: productsRoot, 
-          props: { searchInputSelector: '#search' } 
+          props: { searchInputSelector: '#search,#mobile-search' } 
         });
+        
+        // Inicializar menú hamburguesa
+        initMobileMenu();
       }
     });
+
+    function initMobileMenu() {
+      const menuBtn = document.getElementById('mobile-menu-btn');
+      const mobileMenu = document.getElementById('mobile-menu');
+      const hamburgerIcon = document.getElementById('hamburger-icon');
+      const closeIcon = document.getElementById('close-icon');
+      const mobileSearch = document.getElementById('mobile-search');
+      const desktopSearch = document.getElementById('search');
+      let isMenuOpen = false;
+
+      // Toggle menú
+      if (menuBtn && mobileMenu) {
+        menuBtn.addEventListener('click', () => {
+          isMenuOpen = !isMenuOpen;
+          if (isMenuOpen) {
+            mobileMenu.classList.remove('scale-y-0', 'opacity-0');
+            mobileMenu.classList.add('scale-y-100', 'opacity-100');
+            hamburgerIcon.classList.add('hidden');
+            closeIcon.classList.remove('hidden');
+          } else {
+            mobileMenu.classList.add('scale-y-0', 'opacity-0');
+            mobileMenu.classList.remove('scale-y-100', 'opacity-100');
+            hamburgerIcon.classList.remove('hidden');
+            closeIcon.classList.add('hidden');
+          }
+        });
+      }
+
+      // Sincronizar búsquedas
+      if (mobileSearch && desktopSearch) {
+        mobileSearch.addEventListener('input', (e) => {
+          desktopSearch.value = e.target.value;
+          desktopSearch.dispatchEvent(new Event('input'));
+        });
+      }
+
+      // Cargar categorías en el menú móvil
+      loadMobileCategories();
+    }
+
+    async function loadMobileCategories() {
+      try {
+        const response = await fetch('/api/catalogo');
+        const products = await response.json();
+        
+        const categorySet = new Set();
+        products.forEach(product => {
+          if (product.category && product.category.trim()) {
+            categorySet.add(product.category.trim());
+          }
+        });
+        
+        const categories = Array.from(categorySet).sort();
+        const categoriesList = document.getElementById('mobile-categories-list');
+        
+        if (categoriesList) {
+          categoriesList.innerHTML = `
+            <button class="mobile-category-btn w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-gray-100 text-gray-700" data-category="">
+              Todas las categorías
+            </button>
+            ${categories.map(category => `
+              <button class="mobile-category-btn w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-gray-100 text-gray-700" data-category="${category}">
+                ${category}
+              </button>
+            `).join('')}
+          `;
+          
+          // Bind category events
+          categoriesList.querySelectorAll('.mobile-category-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const category = e.target.dataset.category || '';
+              window.dispatchEvent(new CustomEvent('category-selected', { detail: category }));
+              
+              // Close menu
+              const mobileMenu = document.getElementById('mobile-menu');
+              const hamburgerIcon = document.getElementById('hamburger-icon');
+              const closeIcon = document.getElementById('close-icon');
+              if (mobileMenu) {
+                mobileMenu.classList.add('scale-y-0', 'opacity-0');
+                mobileMenu.classList.remove('scale-y-100', 'opacity-100');
+                hamburgerIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+              }
+            });
+          });
+        }
+      } catch (error) {
+        console.error('Error loading mobile categories:', error);
+      }
+    }
   </script>
 </Layout>
