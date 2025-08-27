@@ -179,11 +179,17 @@
     handleSearch(query, isMobile) {
       clearTimeout(this.searchTimeout);
       
+      // Disparar evento para filtrar productos en el home
+      if (window.location.pathname === '/') {
+        window.dispatchEvent(new CustomEvent('global-search', { detail: query }));
+      }
+      
       if (query.length < this.minSearchLength) {
         this.hideResults(isMobile);
         return;
       }
       
+      // El dropdown AJAX funciona en TODAS las páginas
       this.searchTimeout = setTimeout(() => {
         this.performSearch(query, isMobile);
       }, 300);
@@ -289,8 +295,116 @@
     }
   }
   
-  // Initialize global search when DOM is loaded
+  // Mobile menu functionality
+  class MobileMenu {
+    constructor() {
+      this.mobileMenuBtn = document.getElementById('mobile-menu-btn');
+      this.mobileMenu = document.getElementById('mobile-menu');
+      this.hamburgerIcon = document.getElementById('hamburger-icon');
+      this.closeIcon = document.getElementById('close-icon');
+      this.isOpen = false;
+      
+      this.init();
+    }
+    
+    init() {
+      if (this.mobileMenuBtn) {
+        this.mobileMenuBtn.addEventListener('click', () => {
+          this.toggle();
+        });
+      }
+    }
+    
+    toggle() {
+      this.isOpen = !this.isOpen;
+      
+      if (this.isOpen) {
+        this.open();
+      } else {
+        this.close();
+      }
+    }
+    
+    open() {
+      this.mobileMenu.classList.remove('scale-y-0', 'opacity-0');
+      this.mobileMenu.classList.add('scale-y-100', 'opacity-100');
+      this.hamburgerIcon.classList.add('hidden');
+      this.closeIcon.classList.remove('hidden');
+    }
+    
+    close() {
+      this.mobileMenu.classList.add('scale-y-0', 'opacity-0');
+      this.mobileMenu.classList.remove('scale-y-100', 'opacity-100');
+      this.hamburgerIcon.classList.remove('hidden');
+      this.closeIcon.classList.add('hidden');
+      this.isOpen = false;
+    }
+  }
+
+  // Load mobile categories
+  async function loadMobileCategories() {
+    try {
+      const response = await fetch('/api/catalogo');
+      if (!response.ok) return;
+      
+      const products = await response.json();
+      const categorySet = new Set();
+      
+      products.forEach(product => {
+        if (product.category && product.category.trim()) {
+          categorySet.add(product.category.trim());
+        }
+      });
+      
+      const categories = Array.from(categorySet).sort();
+      const container = document.getElementById('mobile-categories-list');
+      
+      if (container) {
+        container.innerHTML = `
+          <button data-category="" class="mobile-category-item w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-gold-50 text-gray-700">
+            Todas las categorías
+          </button>
+          ${categories.map(category => `
+            <button data-category="${category}" class="mobile-category-item w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-gold-50 text-gray-700">
+              ${category}
+            </button>
+          `).join('')}
+        `;
+        
+        // Add click events
+        container.querySelectorAll('.mobile-category-item').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const category = e.target.getAttribute('data-category');
+            
+            // Si estamos en el home, filtrar productos
+            if (window.location.pathname === '/') {
+              window.dispatchEvent(new CustomEvent('category-selected', { detail: category }));
+            } else {
+              // Si estamos en otra página, redirigir al home con filtro
+              if (category) {
+                window.location.href = `/?category=${encodeURIComponent(category)}`;
+              } else {
+                window.location.href = '/';
+              }
+            }
+            
+            // Close mobile menu
+            const mobileMenuInstance = window.mobileMenuInstance;
+            if (mobileMenuInstance) {
+              mobileMenuInstance.close();
+            }
+          });
+        });
+      }
+    } catch (error) {
+      console.error('Error loading mobile categories:', error);
+    }
+  }
+
+  // Initialize both components when DOM is loaded
   document.addEventListener('DOMContentLoaded', () => {
     new GlobalSearch();
+    window.mobileMenuInstance = new MobileMenu();
+    loadMobileCategories();
   });
 </script>

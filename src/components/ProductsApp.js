@@ -1,7 +1,7 @@
 export default class ProductsApp {
   constructor({ target, props = {} }) {
     this.target = target;
-    this.searchInput = document.querySelector(props.searchInputSelector || '#search');
+    this.searchInput = props.searchInputSelector ? document.querySelector(props.searchInputSelector) : null;
     this.products = [];
     this.filteredProducts = [];
     this.currentCategory = '';
@@ -25,6 +25,9 @@ export default class ProductsApp {
 
     // Filtro por categoría
     window.addEventListener('category-selected', this.handleCategoryFilter.bind(this));
+    
+    // Búsqueda global desde Header
+    window.addEventListener('global-search', this.handleGlobalSearch.bind(this));
   }
 
   async fetchProducts() {
@@ -64,6 +67,12 @@ export default class ProductsApp {
     this.currentCategory = event.detail || '';
     const query = this.searchInput ? this.searchInput.value.trim().toLowerCase() : '';
     this.filterProducts(query, this.currentCategory);
+  }
+
+  handleGlobalSearch(event) {
+    const query = event.detail || '';
+    this.filterProducts(query.toLowerCase(), this.currentCategory);
+    this.render();
   }
 
   filterProducts(searchQuery = '', category = '') {
@@ -130,8 +139,7 @@ export default class ProductsApp {
       </div>
     `;
 
-    // Temporalmente desactivado para debuggear
-    // this.setupLazyLoading();
+    this.setupLazyLoading();
   }
 
   renderProductCard(product) {
