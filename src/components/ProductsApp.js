@@ -36,6 +36,12 @@ export default class ProductsApp {
       
       const data = await response.json();
       this.products = Array.isArray(data) ? data : [];
+      
+      // Shuffle aleatorio solo en el home
+      if (window.location.pathname === '/') {
+        this.shuffleArray(this.products);
+      }
+      
       this.filteredProducts = [...this.products];
       
     } catch (error) {
@@ -277,6 +283,13 @@ export default class ProductsApp {
     lazyImages.forEach(img => imageObserver.observe(img));
   }
 
+
+  shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
 
   escapeHtml(text) {
     const map = {

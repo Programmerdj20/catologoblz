@@ -13,13 +13,14 @@
       </div>
       
       <!-- Barra de búsqueda desktop -->
-      <div class="hidden xl:block w-96">
+      <div class="hidden xl:block w-96 relative">
         <div class="relative group">
           <input 
             id="search" 
             type="text"
-            placeholder="Buscar productos, categorías..." 
+            placeholder="Buscar productos, SKU, referencia..." 
             class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-300 focus:border-transparent transition-all duration-300 bg-gray-50 focus:bg-white group-hover:bg-white text-gray-900 placeholder-gray-500"
+            autocomplete="off"
           >
           <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <svg class="h-5 w-5 text-gray-400 group-focus-within:text-gold-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -29,6 +30,11 @@
           <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
             <kbd class="px-2 py-1 text-xs text-gray-400 bg-gray-100 rounded border">⌘K</kbd>
           </div>
+        </div>
+        
+        <!-- Dropdown de resultados -->
+        <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-96 overflow-y-auto hidden z-50">
+          <div id="search-results-content"></div>
         </div>
       </div>
 
@@ -68,19 +74,25 @@
   >
     <div class="container py-4">
       <!-- Barra de búsqueda móvil -->
-      <div class="mt-4 mb-4">
+      <div class="mt-4 mb-4 relative">
         <div class="relative">
           <input 
             id="mobile-search" 
             type="text"
-            placeholder="Buscar productos..." 
+            placeholder="Buscar productos, SKU, referencia..." 
             class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-300 focus:border-transparent transition-all duration-300 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
+            autocomplete="off"
           >
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
           </div>
+        </div>
+        
+        <!-- Dropdown de resultados móvil -->
+        <div id="mobile-search-results" class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-80 overflow-y-auto hidden z-50">
+          <div id="mobile-search-results-content"></div>
         </div>
       </div>
       
@@ -97,3 +109,186 @@
     </div>
   </div>
 </header>
+
+<script>
+  class GlobalSearch {
+    constructor() {
+      this.searchInput = document.getElementById('search');
+      this.mobileSearchInput = document.getElementById('mobile-search');
+      this.searchResults = document.getElementById('search-results');
+      this.mobileSearchResults = document.getElementById('mobile-search-results');
+      this.searchResultsContent = document.getElementById('search-results-content');
+      this.mobileSearchResultsContent = document.getElementById('mobile-search-results-content');
+      
+      this.searchTimeout = null;
+      this.minSearchLength = 3;
+      this.maxResults = 10;
+      
+      this.init();
+    }
+    
+    init() {
+      // Desktop search
+      if (this.searchInput) {
+        this.searchInput.addEventListener('input', (e) => {
+          this.handleSearch(e.target.value, false);
+        });
+        
+        this.searchInput.addEventListener('focus', () => {
+          if (this.searchInput.value.length >= this.minSearchLength) {
+            this.showResults(false);
+          }
+        });
+        
+        this.searchInput.addEventListener('blur', () => {
+          // Delay to allow clicking on results
+          setTimeout(() => this.hideResults(false), 200);
+        });
+      }
+      
+      // Mobile search
+      if (this.mobileSearchInput) {
+        this.mobileSearchInput.addEventListener('input', (e) => {
+          this.handleSearch(e.target.value, true);
+        });
+        
+        this.mobileSearchInput.addEventListener('focus', () => {
+          if (this.mobileSearchInput.value.length >= this.minSearchLength) {
+            this.showResults(true);
+          }
+        });
+        
+        this.mobileSearchInput.addEventListener('blur', () => {
+          setTimeout(() => this.hideResults(true), 200);
+        });
+      }
+      
+      // Close results when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#search') && !e.target.closest('#search-results')) {
+          this.hideResults(false);
+        }
+        if (!e.target.closest('#mobile-search') && !e.target.closest('#mobile-search-results')) {
+          this.hideResults(true);
+        }
+      });
+    }
+    
+    handleSearch(query, isMobile) {
+      clearTimeout(this.searchTimeout);
+      
+      if (query.length < this.minSearchLength) {
+        this.hideResults(isMobile);
+        return;
+      }
+      
+      this.searchTimeout = setTimeout(() => {
+        this.performSearch(query, isMobile);
+      }, 300);
+    }
+    
+    async performSearch(query, isMobile) {
+      try {
+        const response = await fetch('/api/catalogo');
+        if (!response.ok) return;
+        
+        const products = await response.json();
+        const results = this.filterProducts(products, query);
+        this.displayResults(results, isMobile);
+        this.showResults(isMobile);
+        
+      } catch (error) {
+        console.error('Error searching products:', error);
+      }
+    }
+    
+    filterProducts(products, query) {
+      const searchTerm = query.toLowerCase().trim();
+      
+      return products
+        .filter(product => {
+          const title = (product.title || '').toLowerCase();
+          const sku = (product.sku || '').toLowerCase();
+          const description = (product.description || '').toLowerCase();
+          
+          return title.includes(searchTerm) || 
+                 sku.includes(searchTerm) || 
+                 description.includes(searchTerm);
+        })
+        .slice(0, this.maxResults);
+    }
+    
+    displayResults(results, isMobile) {
+      const container = isMobile ? this.mobileSearchResultsContent : this.searchResultsContent;
+      
+      if (results.length === 0) {
+        container.innerHTML = `
+          <div class="p-4 text-center text-gray-500">
+            <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <p class="text-sm">No se encontraron productos</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = results.map(product => `
+        <a href="/product/${encodeURIComponent(product.id)}" class="flex items-center p-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
+          <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+            <img 
+              src="${this.escapeHtml(product.images?.[0] || '/assets/placeholder.svg')}" 
+              alt="${this.escapeHtml(product.title)}"
+              class="w-full h-full object-cover"
+              onerror="this.src='/assets/placeholder.svg';"
+            >
+          </div>
+          <div class="ml-3 flex-1 min-w-0">
+            <div class="text-sm font-medium text-gray-900 truncate">
+              ${this.escapeHtml(product.title)}
+            </div>
+            <div class="text-xs text-gray-500 truncate">
+              SKU: ${this.escapeHtml(product.sku)} • ${this.escapeHtml(product.category)}
+            </div>
+            <div class="text-xs text-gold-600 font-medium">
+              ${this.escapeHtml(product.material)}
+            </div>
+          </div>
+          <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </a>
+      `).join('');
+    }
+    
+    showResults(isMobile) {
+      const container = isMobile ? this.mobileSearchResults : this.searchResults;
+      if (container) {
+        container.classList.remove('hidden');
+      }
+    }
+    
+    hideResults(isMobile) {
+      const container = isMobile ? this.mobileSearchResults : this.searchResults;
+      if (container) {
+        container.classList.add('hidden');
+      }
+    }
+    
+    escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return String(text || '').replace(/[&<>"']/g, m => map[m]);
+    }
+  }
+  
+  // Initialize global search when DOM is loaded
+  document.addEventListener('DOMContentLoaded', () => {
+    new GlobalSearch();
+  });
+</script>
