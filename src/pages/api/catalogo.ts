@@ -16,19 +16,20 @@ function basicAuthHeader(user: string, pass: string): string {
 
 // Mapeo de IDs de categoría a nombres legibles
 const CATEGORY_MAP: Record<string, string> = {
-    "15": "Exclusividades",
-    "16": "Rosarios",
-    "17": "Tobilleras",
-    "18": "Pulseras",
-    "19": "Cadenas",
-    "20": "Aretes",
-    "21": "Cruceros",
-    "22": "Herrajes",
-    "23": "Dijes",
-    "25": "Conjuntos",
-    "27": "Otros",
     "29": "Anillos",
-    "31": "Diferencial"
+    "20": "Aretes",
+    "19": "Cadenas",
+    "25": "Conjuntos",
+    "21": "Cruceros",
+    "31": "Diferencial",
+    "23": "Dijes",
+    "45": "Duo",
+    "15": "Exclusividades",
+    "22": "Herrajes",
+    "27": "Otros",
+    "18": "Pulseras",
+    "16": "Rosarios",
+    "17": "Tobilleras"
 };
 
 function getCategoryName(categoryId: string): string {
