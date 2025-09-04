@@ -256,6 +256,17 @@
         .slice(0, this.maxResults);
     }
     
+    formatPrice(price) {
+      if (!price || price <= 0) return null;
+      
+      return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(price);
+    }
+
     displayResults(results, isMobile) {
       const container = isMobile ? this.mobileSearchResultsContent : this.searchResultsContent;
       
@@ -279,7 +290,10 @@
         return;
       }
       
-      container.innerHTML = results.map(product => `
+      container.innerHTML = results.map(product => {
+        const formattedPrice = this.formatPrice(product.maxPrice);
+        
+        return `
         <a href="/product/${encodeURIComponent(product.id)}" class="flex items-center p-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
           <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
             <img 
@@ -290,21 +304,31 @@
             >
           </div>
           <div class="ml-3 flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-900 truncate">
-              ${this.escapeHtml(product.title)}
-            </div>
-            <div class="text-xs text-gray-500 truncate">
-              SKU: ${this.escapeHtml(product.sku)} • ${this.escapeHtml(product.category)}
-            </div>
-            <div class="text-xs text-gold-600 font-medium">
-              ${this.escapeHtml(product.material)}
+            <div class="flex items-start justify-between">
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-gray-900 truncate">
+                  ${this.escapeHtml(product.title)}
+                </div>
+                <div class="text-xs text-gray-500 truncate">
+                  SKU: ${this.escapeHtml(product.sku)} • ${this.escapeHtml(product.category)}
+                </div>
+                <div class="text-xs text-gold-600 font-medium">
+                  ${this.escapeHtml(product.material)}
+                </div>
+              </div>
+              <div class="flex items-center gap-2 ml-2">
+                ${formattedPrice ? `
+                  <span class="text-sm font-bold text-gold-700 whitespace-nowrap">${formattedPrice}</span>
+                ` : ''}
+                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
             </div>
           </div>
-          <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-          </svg>
         </a>
-      `).join('');
+        `;
+      }).join('');
     }
     
     showResults(isMobile) {

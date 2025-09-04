@@ -36,6 +36,30 @@ function getCategoryName(categoryId: string): string {
     return CATEGORY_MAP[categoryId] || null;
 }
 
+function extractMaxPrice(p: any): number | undefined {
+    const priceFields = [
+        p.precio_publico,
+        p.precio_mayorista,
+        p.precio,
+        p.precioMaximo,
+        p.precio_maximo,
+        p.precioMax,
+        p.precio_max,
+        p.price,
+        p.priceMax,
+        p.maxPrice,
+        p.precio_venta,
+        p.precioVenta
+    ];
+    
+    const validPrices = priceFields
+        .filter(price => price != null && !isNaN(parseFloat(price)))
+        .map(price => parseFloat(price))
+        .filter(price => price > 0);
+    
+    return validPrices.length > 0 ? Math.max(...validPrices) : undefined;
+}
+
 async function getBasicProductImages(referencia: string, imagen?: string, includeSecondImage: boolean = false): Promise<string[]> {
     const images: string[] = [];
     const baseUrl = `https://belatrizcolombia.com/app/public/template/shop/img/img_productos/${referencia}/`;
@@ -106,6 +130,7 @@ interface Product {
     description: string;
     images: string[];
     material: string;
+    maxPrice?: number;
 }
 
 async function normalizeProduct(p: any): Promise<Product | null> {
@@ -151,6 +176,7 @@ async function normalizeProduct(p: any): Promise<Product | null> {
     }
 
     const material = p.material || p.Material || p.tipo_material || "Oro Laminado 18K";
+    const maxPrice = extractMaxPrice(p);
 
     return {
         id,
@@ -160,6 +186,7 @@ async function normalizeProduct(p: any): Promise<Product | null> {
         description,
         images,
         material,
+        maxPrice,
     };
 }
 

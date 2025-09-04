@@ -142,6 +142,17 @@ export default class ProductsApp {
     this.setupLazyLoading();
   }
 
+  formatPrice(price) {
+    if (!price || price <= 0) return null;
+    
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(price);
+  }
+
   renderProductCard(product) {
     // Validar que el producto tenga los datos mínimos necesarios
     if (!product || !product.id) {
@@ -153,10 +164,11 @@ export default class ProductsApp {
     const sku = product.sku || 'N/A';
     const category = product.category || 'Sin categoría';
     const material = product.material || 'Material no especificado';
+    const formattedPrice = this.formatPrice(product.maxPrice);
 
     return `
-      <article class="group bg-white rounded-xl shadow-sm hover:shadow-lg hover-scale transition-all duration-300 overflow-hidden border border-gray-100">
-        <a href="/product/${encodeURIComponent(product.id)}" class="block">
+      <article class="group bg-white rounded-xl shadow-sm hover:shadow-lg hover-scale transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full">
+        <a href="/product/${encodeURIComponent(product.id)}" class="block flex-1 flex flex-col">
           <div class="relative overflow-hidden aspect-square bg-gray-50">
             <img
               src="${this.escapeHtml(primaryImage)}"
@@ -171,19 +183,26 @@ export default class ProductsApp {
             </div>
             <div class="absolute inset-0 bg-gradient-to-t from-black/0 via-transparent to-black/0 group-hover:from-black/5 transition-all duration-300"></div>
           </div>
-          <div class="p-4">
-            <div class="text-xs text-gray-500 mb-1 font-mono">${this.escapeHtml(sku)}</div>
-            <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-gold-600 transition-colors duration-200 leading-tight">
-              ${this.escapeHtml(title)}
-            </h3>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gold-600 font-medium">${this.escapeHtml(material)}</span>
-              <div class="opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-1 group-hover:translate-x-0">
-                <svg class="w-4 h-4 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
+          <div class="p-4 flex flex-col space-y-2">
+            <!-- SKU y Material (responsive) -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div class="text-xs text-gray-500 font-mono">${this.escapeHtml(sku)}</div>
+              <div class="text-xs px-1 py-0 bg-gold-50 rounded-md text-gold-600 font-medium sm:px-2 sm:py-0.5 mt-1 sm:mt-0 self-start">
+                ${this.escapeHtml(material)}
               </div>
             </div>
+            
+            <!-- Título truncado -->
+            <h3 class="font-semibold text-gray-900 group-hover:text-gold-600 transition-colors duration-200 truncate">
+              ${this.escapeHtml(title)}
+            </h3>
+            
+            <!-- Precio al final -->
+            ${formattedPrice ? `
+              <div class="pt-2">
+                <span class="text-lg font-bold text-gold-700">${formattedPrice}</span>
+              </div>
+            ` : ''}
           </div>
         </a>
       </article>
