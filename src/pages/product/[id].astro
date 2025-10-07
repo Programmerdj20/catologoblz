@@ -1,0 +1,586 @@
+---
+import Layout from '../../components/Layout.astro';
+import Header from '../../components/Header.astro';
+
+interface Product {
+  id: string;
+  title: string;
+  sku: string;
+  category: string;
+  description: string;
+  images: string[];
+  material: string;
+  maxPrice?: number;
+}
+
+const { id } = Astro.params;
+
+// Mapeo de categorías (copiado de catalogo.ts)
+const CATEGORY_MAP: Record<string, string> = {
+    "15": "Anillos",
+    "16": "Aretes", 
+    "17": "Cadenas",
+    "18": "Pulseras",
+    "19": "Collares",
+    "20": "Aretes",
+    "21": "Topos",
+    "22": "Gargantillas",
+    "23": "Dijes",
+    "24": "Pendientes",
+    "25": "Sortijas",
+    "26": "Esclavas",
+    "27": "Argollas",
+    "28": "Chokers",
+    "29": "Rosarios",
+    "30": "Medallas",
+    "31": "Cruces"
+};
+
+function getCategoryName(categoryId: string): string {
+    return CATEGORY_MAP[categoryId] || `Categoría ${categoryId}`;
+}
+
+// Fetch del producto específico
+let product: Product | null = null;
+let error: string | null = null;
+
+try {
+  // Usar API interna directamente para mejor rendimiento
+  const API_URL = "https://belatrizcolombia.com/apirest/public/catalago2";
+  const API_USER = "a2ya10afP9TJVCL2Geh/8IUoGbfcOiEnzi1q5WQDx7G1sjIBo8OfU19rW4OK";
+  const API_PASS = "o2yo12oF6T3Hfv.kPLtJKvO3BQE4esRQT3gB86F7GV6ADJAT55zgaNgTEB3m";
+  
+  const authHeader = "Basic " + Buffer.from(`${API_USER}:${API_PASS}`).toString("base64");
+  
+  const response = await fetch(API_URL, {
+    method: "GET",
+    headers: {
+      "Accept": "application/json",
+      "Authorization": authHeader,
+      "User-Agent": "Mozilla/5.0 (compatible; JewelryCatalog/1.0)",
+    }
+  });
+  
+  if (response.ok) {
+    const data = await response.json();
+    
+    // Buscar el producto específico
+    if (data && data.detalles && Array.isArray(data.detalles)) {
+      const productData = data.detalles.find((p: any) => {
+        const productId = p.referencia || p.id || p.ID || p.ref;
+        return productId === id;
+      });
+      
+      if (productData) {
+        // Usar la API del catálogo para obtener el producto normalizado con imágenes
+        const catalogResponse = await fetch(`${new URL(Astro.request.url).origin}/api/catalogo?id=${encodeURIComponent(id || '')}`);
+        
+        if (catalogResponse.ok) {
+          const catalogProducts = await catalogResponse.json();
+          if (catalogProducts && catalogProducts.length > 0) {
+            product = catalogProducts[0];
+          }
+        }
+        
+        // Si no se pudo obtener del catálogo, crear producto básico
+        if (!product) {
+          const baseUrl = `https://belatrizcolombia.com/app/public/template/shop/img/img_productos/${productData.referencia}/`;
+          const images = [productData.imagen ? (productData.imagen.startsWith('http') ? productData.imagen : baseUrl + productData.imagen) : baseUrl + 'PERFIL.webp'];
+          
+          product = {
+            id: productData.referencia || productData.id || id,
+            title: productData.descripción || productData.descripcion || "Sin título",
+            sku: productData.referencia || id,
+            category: getCategoryName((productData.categoría || productData.categoria || "").toString()),
+            description: productData.descripción || productData.descripcion || "Sin descripción",
+            images: images,
+            material: productData.material || "Oro Laminado 18K"
+          };
+        }
+      }
+    }
+  } else {
+    error = `Error ${response.status}: ${response.statusText}`;
+  }
+} catch (e: any) {
+  error = e.message;
+  console.error('Error fetching product:', e);
+}
+
+const pageTitle = product ? `${product.title} - Joyería Belatriz` : 'Producto no encontrado';
+const pageDescription = product ? `${product.title} - ${product.material}. ${product.description}` : 'Producto no encontrado en nuestro catálogo.';
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <Header />
+  
+  <div class="container py-8">
+    {product ? (
+      <div class="max-w-6xl mx-auto">
+        <!-- Breadcrumb -->
+        <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-8 mt-6">
+          <a href="/" class="hover:text-gold-600 transition-colors">Inicio</a>
+          <span>/</span>
+          <a href={`/?category=${encodeURIComponent(product.category)}`} class="hover:text-gold-600 transition-colors">{product.category}</a>
+          <span>/</span>
+          <span class="text-gray-900 font-medium">{product.title}</span>
+        </nav>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <!-- Galería de imágenes -->
+          <div class="space-y-4">
+            <!-- Imagen principal con controles -->
+            <div class="relative aspect-square bg-gray-50 rounded-xl overflow-hidden group">
+              <div id="image-slider" class="flex transition-transform duration-500 ease-in-out h-full">
+                {product.images.map((image: string, index: number) => (
+                  <div class="w-full h-full flex-shrink-0">
+                    <img 
+                      src={image} 
+                      alt={`${product.title} - vista ${index + 1}`}
+                      class="w-full h-full object-cover"
+                    >
+                  </div>
+                ))}
+              </div>
+              
+              <!-- Botón maximizar -->
+              <button 
+                id="maximize-btn"
+                class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow-sm opacity-70 group-hover:opacity-100 transition-opacity hover:bg-white z-10"
+              >
+                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                </svg>
+              </button>
+
+              <!-- Controles de navegación -->
+              {product.images.length > 1 && (
+                <>
+                  <button 
+                    id="prev-btn"
+                    class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-sm opacity-70 group-hover:opacity-100 transition-opacity hover:bg-white z-10"
+                  >
+                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                  </button>
+                  <button 
+                    id="next-btn"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-sm opacity-70 group-hover:opacity-100 transition-opacity hover:bg-white z-10"
+                  >
+                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                  </button>
+                </>
+              )}
+
+              <!-- Indicadores -->
+              {product.images.length > 1 && (
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                  {product.images.map((_, index: number) => (
+                    <button 
+                      class="indicator w-2 h-2 rounded-full bg-white/50 transition-all hover:bg-white"
+                      data-index={index}
+                    ></button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <!-- Thumbnails -->
+            {product.images.length > 1 && (
+              <div class="grid grid-cols-5 gap-3">
+                {product.images.map((image: string, index: number) => (
+                  <button 
+                    class="thumbnail aspect-square bg-gray-50 rounded-lg overflow-hidden border-2 border-transparent hover:border-gold-300 transition-colors"
+                    data-index={index}
+                  >
+                    <img 
+                      src={image} 
+                      alt={`${product.title} - vista ${index + 1}`}
+                      class="w-full h-full object-cover"
+                    >
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <!-- Modal de maximizar con slider -->
+          <div id="image-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+            <div class="relative w-full max-w-6xl max-h-full flex flex-col">
+              <!-- Barra superior con controles -->
+              <div class="flex justify-between items-center mb-4">
+                <div class="text-white text-sm">
+                  <span id="modal-counter">1 / {product.images.length}</span>
+                </div>
+                <button 
+                  id="close-modal"
+                  class="text-white hover:text-gray-300 transition-colors p-2"
+                >
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Contenedor del slider modal -->
+              <div class="relative flex-1 flex items-center justify-center">
+                <div class="relative w-full h-full max-h-[80vh] overflow-hidden rounded-lg">
+                  <div id="modal-slider" class="flex transition-transform duration-500 ease-in-out h-full">
+                    {product.images.map((image: string, index: number) => (
+                      <div class="w-full h-full flex-shrink-0 flex items-center justify-center">
+                        <img 
+                          src={image} 
+                          alt={`${product.title} - vista ${index + 1}`}
+                          class="max-w-full max-h-full object-contain"
+                        >
+                      </div>
+                    ))}
+                  </div>
+
+                  <!-- Controles de navegación del modal -->
+                  {product.images.length > 1 && (
+                    <>
+                      <button 
+                        id="modal-prev-btn"
+                        class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white/30 transition-all"
+                      >
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                      </button>
+                      <button 
+                        id="modal-next-btn"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white/30 transition-all"
+                      >
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <!-- Indicadores del modal -->
+              {product.images.length > 1 && (
+                <div class="flex justify-center space-x-2 mt-4">
+                  {product.images.map((_, index: number) => (
+                    <button 
+                      class="modal-indicator w-3 h-3 rounded-full bg-white/30 transition-all hover:bg-white/60"
+                      data-index={index}
+                    ></button>
+                  ))}
+                </div>
+              )}
+
+              <!-- Thumbnails del modal -->
+              {product.images.length > 1 && (
+                <div class="flex justify-center space-x-2 mt-4 max-w-full overflow-x-auto">
+                  {product.images.map((image: string, index: number) => (
+                    <button 
+                      class="modal-thumbnail flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 border-transparent hover:border-white/50 transition-colors"
+                      data-index={index}
+                    >
+                      <img 
+                        src={image} 
+                        alt={`${product.title} - vista ${index + 1}`}
+                        class="w-full h-full object-cover"
+                      >
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <!-- Información del producto -->
+          <div class="space-y-6">
+            <div>
+              <div class="text-sm text-gray-500 mb-2">{product.sku}</div>
+              <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                {product.title}
+              </h1>
+              
+              <div class="flex flex-wrap gap-3 mb-6">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gold-100 text-gold-800">
+                  {product.category}
+                </span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gold-100 text-gold-800">
+                  {product.material}
+                </span>
+              </div>
+
+              {product.maxPrice && (
+                <div class="mb-8">
+                  <div class="text-2xl lg:text-3xl font-bold text-gold-700">
+                    {new Intl.NumberFormat('es-CO', {
+                      style: 'currency',
+                      currency: 'COP',
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0
+                    }).format(product.maxPrice)}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <!-- Características -->
+            <div class="bg-gray-50 rounded-xl p-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4">Características</h3>
+              <dl class="space-y-3">
+                <div class="flex justify-between">
+                  <dt class="text-gray-600">Material:</dt>
+                  <dd class="font-medium text-gray-900">{product.material}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-gray-600">Categoría:</dt>
+                  <dd class="font-medium text-gray-900">{product.category}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-gray-600">Referencia:</dt>
+                  <dd class="font-medium text-gray-900">{product.sku}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <!-- Botón de regreso -->
+            <div class="pt-6 mb-16 pb-6 sm:mb-0 sm:pb-0">
+              <a 
+                href="/" 
+                class="inline-flex items-center px-6 py-3 bg-gold-600 text-white font-medium rounded-lg hover:bg-gold-700 transition-colors duration-200"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Volver al catálogo
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    ) : (
+      <div class="text-center py-16">
+        <div class="text-6xl mb-4">😔</div>
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Producto no encontrado</h1>
+        <p class="text-gray-600 mb-8">El producto que buscas no existe o ha sido removido del catálogo.</p>
+        {error && (
+          <p class="text-sm text-red-600 mb-4">Error: {error}</p>
+        )}
+        <a 
+          href="/" 
+          class="inline-flex items-center px-6 py-3 bg-gold-600 text-white font-medium rounded-lg hover:bg-gold-700 transition-colors duration-200"
+        >
+          Volver al catálogo
+        </a>
+      </div>
+    )}
+  </div>
+
+  {product && (
+    <script is:inline define:vars={{ productImages: product.images, productTitle: product.title }}>
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('Inicializando slider de producto...');
+        
+        const slider = document.getElementById('image-slider');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const maximizeBtn = document.getElementById('maximize-btn');
+        const modal = document.getElementById('image-modal');
+        const modalSlider = document.getElementById('modal-slider');
+        const modalPrevBtn = document.getElementById('modal-prev-btn');
+        const modalNextBtn = document.getElementById('modal-next-btn');
+        const modalCounter = document.getElementById('modal-counter');
+        const closeModal = document.getElementById('close-modal');
+        const thumbnails = document.querySelectorAll('.thumbnail');
+        const indicators = document.querySelectorAll('.indicator');
+        const modalThumbnails = document.querySelectorAll('.modal-thumbnail');
+        const modalIndicators = document.querySelectorAll('.modal-indicator');
+        
+        console.log('Elementos encontrados:', {
+          slider: !!slider,
+          prevBtn: !!prevBtn,
+          nextBtn: !!nextBtn,
+          maximizeBtn: !!maximizeBtn,
+          thumbnails: thumbnails.length,
+          indicators: indicators.length
+        });
+        
+        let currentIndex = 0;
+        const totalImages = productImages.length;
+        
+        function updateSlider() {
+          // Actualizar slider principal
+          if (slider) {
+            const translateX = -currentIndex * 100;
+            slider.style.transform = `translateX(${translateX}%)`;
+          }
+          
+          // Actualizar slider del modal
+          if (modalSlider) {
+            const translateX = -currentIndex * 100;
+            modalSlider.style.transform = `translateX(${translateX}%)`;
+          }
+          
+          // Actualizar contador del modal
+          if (modalCounter) {
+            modalCounter.textContent = `${currentIndex + 1} / ${totalImages}`;
+          }
+          
+          // Actualizar indicadores principales
+          indicators.forEach((indicator, index) => {
+            if (index === currentIndex) {
+              indicator.classList.add('bg-white');
+              indicator.classList.remove('bg-white/50');
+            } else {
+              indicator.classList.remove('bg-white');
+              indicator.classList.add('bg-white/50');
+            }
+          });
+          
+          // Actualizar indicadores del modal
+          modalIndicators.forEach((indicator, index) => {
+            if (index === currentIndex) {
+              indicator.classList.add('bg-white');
+              indicator.classList.remove('bg-white/30');
+            } else {
+              indicator.classList.remove('bg-white');
+              indicator.classList.add('bg-white/30');
+            }
+          });
+          
+          // Actualizar thumbnails principales
+          thumbnails.forEach((thumb, index) => {
+            if (index === currentIndex) {
+              thumb.classList.add('border-gold-600');
+              thumb.classList.remove('border-transparent');
+            } else {
+              thumb.classList.remove('border-gold-600');
+              thumb.classList.add('border-transparent');
+            }
+          });
+          
+          // Actualizar thumbnails del modal
+          modalThumbnails.forEach((thumb, index) => {
+            if (index === currentIndex) {
+              thumb.classList.add('border-white');
+              thumb.classList.remove('border-transparent');
+            } else {
+              thumb.classList.remove('border-white');
+              thumb.classList.add('border-transparent');
+            }
+          });
+        }
+        
+        function nextImage() {
+          console.log('Siguiente imagen:', currentIndex, '->', (currentIndex + 1) % totalImages);
+          currentIndex = (currentIndex + 1) % totalImages;
+          updateSlider();
+        }
+        
+        function prevImage() {
+          console.log('Imagen anterior:', currentIndex, '->', (currentIndex - 1 + totalImages) % totalImages);
+          currentIndex = (currentIndex - 1 + totalImages) % totalImages;
+          updateSlider();
+        }
+        
+        function goToImage(index) {
+          currentIndex = index;
+          updateSlider();
+        }
+        
+        // Event listeners
+        if (nextBtn) {
+          console.log('Agregando listener al botón siguiente');
+          nextBtn.addEventListener('click', function() {
+            console.log('Click en botón siguiente');
+            nextImage();
+          });
+        }
+        
+        if (prevBtn) {
+          console.log('Agregando listener al botón anterior');
+          prevBtn.addEventListener('click', function() {
+            console.log('Click en botón anterior');
+            prevImage();
+          });
+        }
+        
+        thumbnails.forEach((thumb, index) => {
+          thumb.addEventListener('click', () => goToImage(index));
+        });
+        
+        indicators.forEach((indicator, index) => {
+          indicator.addEventListener('click', () => goToImage(index));
+        });
+        
+        // Event listeners para controles del modal
+        if (modalPrevBtn) {
+          modalPrevBtn.addEventListener('click', function() {
+            console.log('Click en botón anterior del modal');
+            prevImage();
+          });
+        }
+        
+        if (modalNextBtn) {
+          modalNextBtn.addEventListener('click', function() {
+            console.log('Click en botón siguiente del modal');
+            nextImage();
+          });
+        }
+        
+        modalThumbnails.forEach((thumb, index) => {
+          thumb.addEventListener('click', () => goToImage(index));
+        });
+        
+        modalIndicators.forEach((indicator, index) => {
+          indicator.addEventListener('click', () => goToImage(index));
+        });
+        
+        // Modal functionality
+        if (maximizeBtn && modal) {
+          maximizeBtn.addEventListener('click', function() {
+            console.log('Click en maximizar, imagen actual:', currentIndex);
+            // Sincronizar el modal con la imagen actual
+            updateSlider();
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+          });
+        }
+        
+        if (closeModal && modal) {
+          closeModal.addEventListener('click', function() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+          });
+        }
+        
+        if (modal) {
+          modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+              modal.classList.add('hidden');
+              modal.classList.remove('flex');
+            }
+          });
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'ArrowLeft' && totalImages > 1) {
+            prevImage();
+          } else if (e.key === 'ArrowRight' && totalImages > 1) {
+            nextImage();
+          } else if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+          }
+        });
+        
+        // Initialize
+        updateSlider();
+      });
+    </script>
+  )}
+</Layout>

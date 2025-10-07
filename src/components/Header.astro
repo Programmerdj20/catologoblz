@@ -1,0 +1,557 @@
+---
+---
+
+<header class="bg-white/95 backdrop-blur-sm shadow-sm border-b border-gold-100 sticky top-0 z-50 transition-all duration-300">
+  <div class="container">
+    <div class="flex items-center justify-between py-4">
+      <!-- Logo -->
+      <div class="flex items-center gap-2">
+        <a href="/" class="hover:opacity-80 transition-opacity">
+          <h1 class="text-xl xl:text-3xl font-bold text-gray-900 tracking-tight">
+            <span class="text-gold-600 text-2xl xl:text-4xl">✨</span> 
+            <span class="bg-gradient-to-r from-gold-600 to-gold-500 bg-clip-text text-transparent">ORO LAMINADO 18K</span>
+          </h1>
+        </a>
+      </div>
+      
+      <!-- Barra de búsqueda desktop -->
+      <div class="hidden xl:block w-96 relative">
+        <div class="relative group">
+          <input 
+            id="search" 
+            type="text"
+            placeholder="Buscar productos, SKU, referencia..." 
+            class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-300 focus:border-transparent transition-all duration-300 bg-gray-50 focus:bg-white group-hover:bg-white text-gray-900 placeholder-gray-500"
+            autocomplete="off"
+          >
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400 group-focus-within:text-gold-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+          <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
+            <kbd class="px-2 py-1 text-xs text-gray-400 bg-gray-100 rounded border">⌘K</kbd>
+          </div>
+        </div>
+        
+        <!-- Dropdown de resultados -->
+        <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-96 overflow-y-auto hidden z-[9999]">
+          <div id="search-results-content"></div>
+        </div>
+      </div>
+
+      <!-- Menú hamburguesa responsive -->
+      <div class="block xl:hidden">
+        <button 
+          id="mobile-menu-btn"
+          class="p-2 rounded-lg hover:bg-gold-50 transition-colors"
+        >
+          <svg 
+            id="hamburger-icon"
+            class="w-6 h-6 text-gray-700" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+          <svg 
+            id="close-icon"
+            class="w-6 h-6 text-gray-700 hidden" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Menú desplegable móvil -->
+  <div 
+    id="mobile-menu" 
+    class="xl:hidden absolute top-full left-0 right-0 bg-white border-t border-gray-200 shadow-lg transform transition-all duration-300 ease-in-out origin-top scale-y-0 opacity-0 z-40"
+  >
+    <div class="container py-4">
+      <!-- Pestañas -->
+      <div class="flex border-b border-gray-200 mb-4">
+        <button 
+          id="search-tab-btn"
+          class="flex-1 px-4 py-3 text-sm font-medium text-center border-b-2 transition-colors duration-200 border-gold-500 text-gold-600"
+        >
+          <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          Buscar
+        </button>
+        <button 
+          id="categories-tab-btn"
+          class="flex-1 px-4 py-3 text-sm font-medium text-center border-b-2 transition-colors duration-200 border-transparent text-gray-500 hover:text-gray-700"
+        >
+          <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+          </svg>
+          Categorías
+        </button>
+      </div>
+      
+      <!-- Contenido de la pestaña Buscar -->
+      <div id="search-tab-content" class="tab-content">
+        <div class="mb-4 relative">
+          <div class="relative">
+            <input 
+              id="mobile-search" 
+              type="text"
+              placeholder="Buscar productos, SKU, referencia..." 
+              class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-300 focus:border-transparent transition-all duration-300 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
+              autocomplete="off"
+            >
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+          </div>
+          
+          <!-- Dropdown de resultados móvil -->
+          <div id="mobile-search-results" class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-80 overflow-y-auto hidden z-[9999]">
+            <div id="mobile-search-results-content"></div>
+          </div>
+        </div>
+        
+        <!-- Mensaje de ayuda -->
+        <div class="text-center py-8 text-gray-500">
+          <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <p class="text-sm">Escribe para buscar productos, SKU o referencias</p>
+          <p class="text-xs text-gray-400 mt-1">Los resultados aparecerán aquí</p>
+        </div>
+      </div>
+      
+      <!-- Contenido de la pestaña Categorías -->
+      <div id="categories-tab-content" class="tab-content hidden">
+        <div class="mb-4">
+          <h3 class="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div class="w-1 h-4 bg-gradient-to-b from-gold-400 to-gold-600 rounded-full"></div>
+            SELECCIONAR CATEGORÍA
+          </h3>
+          <div id="mobile-categories-list" class="space-y-1 max-h-64 overflow-y-auto">
+            <!-- Las categorías se cargarán aquí dinámicamente -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  class GlobalSearch {
+    constructor() {
+      this.searchInput = document.getElementById('search');
+      this.mobileSearchInput = document.getElementById('mobile-search');
+      this.searchResults = document.getElementById('search-results');
+      this.mobileSearchResults = document.getElementById('mobile-search-results');
+      this.searchResultsContent = document.getElementById('search-results-content');
+      this.mobileSearchResultsContent = document.getElementById('mobile-search-results-content');
+      
+      this.searchTimeout = null;
+      this.minSearchLength = 3;
+      this.maxResults = 10;
+      
+      this.init();
+    }
+    
+    init() {
+      // Desktop search
+      if (this.searchInput) {
+        this.searchInput.addEventListener('input', (e) => {
+          this.handleSearch(e.target.value, false);
+        });
+        
+        this.searchInput.addEventListener('focus', () => {
+          if (this.searchInput.value.length >= this.minSearchLength) {
+            this.showResults(false);
+          }
+        });
+        
+        this.searchInput.addEventListener('blur', () => {
+          // Delay to allow clicking on results
+          setTimeout(() => this.hideResults(false), 200);
+        });
+      }
+      
+      // Mobile search
+      if (this.mobileSearchInput) {
+        this.mobileSearchInput.addEventListener('input', (e) => {
+          this.handleSearch(e.target.value, true);
+        });
+        
+        this.mobileSearchInput.addEventListener('focus', () => {
+          if (this.mobileSearchInput.value.length >= this.minSearchLength) {
+            this.showResults(true);
+          }
+        });
+        
+        this.mobileSearchInput.addEventListener('blur', () => {
+          setTimeout(() => this.hideResults(true), 200);
+        });
+      }
+      
+      // Close results when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#search') && !e.target.closest('#search-results')) {
+          this.hideResults(false);
+        }
+        if (!e.target.closest('#mobile-search') && !e.target.closest('#mobile-search-results')) {
+          this.hideResults(true);
+        }
+      });
+    }
+    
+    handleSearch(query, isMobile) {
+      clearTimeout(this.searchTimeout);
+      
+      if (query.length < this.minSearchLength) {
+        this.hideResults(isMobile);
+        return;
+      }
+      
+      // El dropdown AJAX funciona en TODAS las páginas
+      this.searchTimeout = setTimeout(() => {
+        this.performSearch(query, isMobile);
+      }, 300);
+    }
+    
+    async performSearch(query, isMobile) {
+      try {
+        const response = await fetch('/api/catalogo');
+        if (!response.ok) return;
+        
+        const products = await response.json();
+        const results = this.filterProducts(products, query);
+        this.displayResults(results, isMobile);
+        this.showResults(isMobile);
+        
+      } catch (error) {
+        console.error('Error searching products:', error);
+      }
+    }
+    
+    filterProducts(products, query) {
+      const searchTerm = query.toLowerCase().trim();
+      
+      return products
+        .filter(product => {
+          const title = (product.title || '').toLowerCase();
+          const sku = (product.sku || '').toLowerCase();
+          const description = (product.description || '').toLowerCase();
+          
+          return title.includes(searchTerm) || 
+                 sku.includes(searchTerm) || 
+                 description.includes(searchTerm);
+        })
+        .slice(0, this.maxResults);
+    }
+    
+    formatPrice(price) {
+      if (!price || price <= 0) return null;
+      
+      return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(price);
+    }
+
+    displayResults(results, isMobile) {
+      const container = isMobile ? this.mobileSearchResultsContent : this.searchResultsContent;
+      
+      // En móvil, ocultar el mensaje de ayuda cuando hay búsqueda activa
+      if (isMobile) {
+        const helpMessage = document.querySelector('#search-tab-content .text-center.py-8');
+        if (helpMessage) {
+          helpMessage.classList.add('hidden');
+        }
+      }
+      
+      if (results.length === 0) {
+        container.innerHTML = `
+          <div class="p-4 text-center text-gray-500">
+            <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <p class="text-sm">No se encontraron productos</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = results.map(product => {
+        const formattedPrice = this.formatPrice(product.maxPrice);
+        
+        return `
+        <a href="/product/${encodeURIComponent(product.id)}" class="flex items-center p-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
+          <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+            <img 
+              src="${this.escapeHtml(product.images?.[0] || '/assets/placeholder.svg')}" 
+              alt="${this.escapeHtml(product.title)}"
+              class="w-full h-full object-cover"
+              onerror="this.src='/assets/placeholder.svg';"
+            >
+          </div>
+          <div class="ml-3 flex-1 min-w-0">
+            <div class="flex items-start justify-between">
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-gray-900 truncate">
+                  ${this.escapeHtml(product.title)}
+                </div>
+                <div class="text-xs text-gray-500 truncate">
+                  SKU: ${this.escapeHtml(product.sku)} • ${this.escapeHtml(product.category)}
+                </div>
+                <div class="text-xs text-gold-600 font-medium">
+                  ${this.escapeHtml(product.material)}
+                </div>
+              </div>
+              <div class="flex items-center gap-2 ml-2">
+                ${formattedPrice ? `
+                  <span class="text-sm font-bold text-gold-700 whitespace-nowrap">${formattedPrice}</span>
+                ` : ''}
+                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </a>
+        `;
+      }).join('');
+    }
+    
+    showResults(isMobile) {
+      const container = isMobile ? this.mobileSearchResults : this.searchResults;
+      if (container) {
+        container.classList.remove('hidden');
+      }
+    }
+    
+    hideResults(isMobile) {
+      const container = isMobile ? this.mobileSearchResults : this.searchResults;
+      if (container) {
+        container.classList.add('hidden');
+      }
+      
+      // En móvil, mostrar el mensaje de ayuda nuevamente cuando se ocultan los resultados
+      if (isMobile) {
+        const helpMessage = document.querySelector('#search-tab-content .text-center.py-8');
+        if (helpMessage) {
+          helpMessage.classList.remove('hidden');
+        }
+      }
+    }
+    
+    escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return String(text || '').replace(/[&<>"']/g, m => map[m]);
+    }
+  }
+  
+  // Mobile menu functionality
+  class MobileMenu {
+    constructor() {
+      this.mobileMenuBtn = document.getElementById('mobile-menu-btn');
+      this.mobileMenu = document.getElementById('mobile-menu');
+      this.hamburgerIcon = document.getElementById('hamburger-icon');
+      this.closeIcon = document.getElementById('close-icon');
+      this.isOpen = false;
+      
+      this.init();
+    }
+    
+    init() {
+      if (this.mobileMenuBtn) {
+        this.mobileMenuBtn.addEventListener('click', () => {
+          this.toggle();
+        });
+      }
+    }
+    
+    toggle() {
+      this.isOpen = !this.isOpen;
+      
+      if (this.isOpen) {
+        this.open();
+      } else {
+        this.close();
+      }
+    }
+    
+    open() {
+      this.mobileMenu.classList.remove('scale-y-0', 'opacity-0');
+      this.mobileMenu.classList.add('scale-y-100', 'opacity-100');
+      this.hamburgerIcon.classList.add('hidden');
+      this.closeIcon.classList.remove('hidden');
+    }
+    
+    close() {
+      this.mobileMenu.classList.add('scale-y-0', 'opacity-0');
+      this.mobileMenu.classList.remove('scale-y-100', 'opacity-100');
+      this.hamburgerIcon.classList.remove('hidden');
+      this.closeIcon.classList.add('hidden');
+      this.isOpen = false;
+    }
+  }
+
+  // Mobile tabs functionality
+  class MobileTabs {
+    constructor() {
+      this.searchTabBtn = document.getElementById('search-tab-btn');
+      this.categoriesTabBtn = document.getElementById('categories-tab-btn');
+      this.searchTabContent = document.getElementById('search-tab-content');
+      this.categoriesTabContent = document.getElementById('categories-tab-content');
+      this.activeTab = 'search'; // Default tab
+      
+      this.init();
+    }
+    
+    init() {
+      if (this.searchTabBtn && this.categoriesTabBtn) {
+        this.searchTabBtn.addEventListener('click', () => {
+          this.switchTab('search');
+        });
+        
+        this.categoriesTabBtn.addEventListener('click', () => {
+          this.switchTab('categories');
+        });
+      }
+    }
+    
+    switchTab(tabName) {
+      if (this.activeTab === tabName) return;
+      
+      this.activeTab = tabName;
+      
+      if (tabName === 'search') {
+        // Activate search tab
+        this.searchTabBtn.classList.remove('border-transparent', 'text-gray-500');
+        this.searchTabBtn.classList.add('border-gold-500', 'text-gold-600');
+        
+        // Deactivate categories tab
+        this.categoriesTabBtn.classList.add('border-transparent', 'text-gray-500');
+        this.categoriesTabBtn.classList.remove('border-gold-500', 'text-gold-600');
+        
+        // Show/hide content
+        this.searchTabContent.classList.remove('hidden');
+        this.categoriesTabContent.classList.add('hidden');
+        
+        // Focus on search input after a short delay
+        setTimeout(() => {
+          const mobileSearchInput = document.getElementById('mobile-search');
+          if (mobileSearchInput) {
+            mobileSearchInput.focus();
+          }
+        }, 100);
+        
+      } else if (tabName === 'categories') {
+        // Activate categories tab
+        this.categoriesTabBtn.classList.remove('border-transparent', 'text-gray-500');
+        this.categoriesTabBtn.classList.add('border-gold-500', 'text-gold-600');
+        
+        // Deactivate search tab
+        this.searchTabBtn.classList.add('border-transparent', 'text-gray-500');
+        this.searchTabBtn.classList.remove('border-gold-500', 'text-gold-600');
+        
+        // Show/hide content
+        this.categoriesTabContent.classList.remove('hidden');
+        this.searchTabContent.classList.add('hidden');
+      }
+    }
+    
+    // Method to switch to search tab programmatically
+    activateSearch() {
+      this.switchTab('search');
+    }
+    
+    // Method to switch to categories tab programmatically
+    activateCategories() {
+      this.switchTab('categories');
+    }
+  }
+
+  // Load mobile categories
+  async function loadMobileCategories() {
+    try {
+      const response = await fetch('/api/catalogo');
+      if (!response.ok) return;
+      
+      const products = await response.json();
+      const categorySet = new Set();
+      
+      products.forEach(product => {
+        if (product.category && product.category.trim()) {
+          categorySet.add(product.category.trim());
+        }
+      });
+      
+      const categories = Array.from(categorySet).sort();
+      const container = document.getElementById('mobile-categories-list');
+      
+      if (container) {
+        container.innerHTML = `
+          <button data-category="" class="mobile-category-item w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-gold-50 text-gray-700">
+            Todas las categorías
+          </button>
+          ${categories.map(category => `
+            <button data-category="${category}" class="mobile-category-item w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-gold-50 text-gray-700">
+              ${category}
+            </button>
+          `).join('')}
+        `;
+        
+        // Add click events
+        container.querySelectorAll('.mobile-category-item').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const category = e.target.getAttribute('data-category');
+            
+            // Si estamos en el home, filtrar productos
+            if (window.location.pathname === '/') {
+              window.dispatchEvent(new CustomEvent('category-selected', { detail: category }));
+            } else {
+              // Si estamos en otra página, redirigir al home con filtro
+              if (category) {
+                window.location.href = `/?category=${encodeURIComponent(category)}`;
+              } else {
+                window.location.href = '/';
+              }
+            }
+            
+            // Close mobile menu
+            const mobileMenuInstance = window.mobileMenuInstance;
+            if (mobileMenuInstance) {
+              mobileMenuInstance.close();
+            }
+          });
+        });
+      }
+    } catch (error) {
+      console.error('Error loading mobile categories:', error);
+    }
+  }
+
+  // Initialize all components when DOM is loaded
+  document.addEventListener('DOMContentLoaded', () => {
+    new GlobalSearch();
+    window.mobileMenuInstance = new MobileMenu();
+    window.mobileTabsInstance = new MobileTabs();
+    loadMobileCategories();
+  });
+</script>
