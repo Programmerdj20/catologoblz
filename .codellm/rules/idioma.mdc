@@ -1,9 +1,0 @@
----
-description: idioma espanol
-globs: 
-alwaysApply: true
----
-
-# Your rule content
-
-- toda la conversacion sera en idioma espanol
