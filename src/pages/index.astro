@@ -1,50 +1,58 @@
----
-import Layout from '../components/Layout.astro';
-import Header from '../components/Header.astro';
-import Banner from '../components/Banner.astro';
----
-
-<Layout>
-  <Header />
-
-  <div class="container py-8">
-    <Banner />
-
-
-    <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
-      <!-- Sidebar de categorías desktop -->
-      <aside class="hidden xl:block xl:col-span-1 sticky top-28 self-start">
-        <div id="categories-root"></div>
-      </aside>
-
-      <!-- Grid de productos -->
-      <main class="xl:col-span-4">
-        <div id="products-root"></div>
-      </main>
-    </div>
-  </div>
-
-  <script>
-    import ProductsApp from '../components/ProductsApp.js';
-    import CategoriesApp from '../components/CategoriesApp.js';
-
-    // Inicializar aplicaciones
-    document.addEventListener('DOMContentLoaded', () => {
-      const categoriesRoot = document.getElementById('categories-root');
-      const productsRoot = document.getElementById('products-root');
-      
-      if (productsRoot) {
-        // Inicializar versión desktop de categorías
-        if (categoriesRoot) {
-          new CategoriesApp({ target: categoriesRoot, props: { isMobile: false } });
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitio en Mantenimiento</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
-        // Inicializar productos (sin búsqueda, ya manejada por Header)
-        new ProductsApp({ 
-          target: productsRoot, 
-          props: {} 
-        });
-      }
-    });
-  </script>
-</Layout>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            text-align: center;
+            background: white;
+            padding: 60px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        p {
+            font-size: 1.2em;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🔧</div>
+        <h1>Sitio en Mantenimiento</h1>
+        <p>Estamos realizando mejoras.<br>Volveremos pronto.</p>
+    </div>
+</body>
+</html>
