@@ -5,8 +5,8 @@ import vercel from "@astrojs/vercel/serverless";
 export default defineConfig({
     integrations: [
         tailwind({
-            // Permitir que Tailwind procese archivos CSS personalizados
-            applyBaseStyles: false,
+            // Incluir estilos base de Tailwind para producción
+            applyBaseStyles: true,
         })
     ],
     output: "server",
